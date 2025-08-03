@@ -299,7 +299,10 @@ export default function Home() {
             </div>
 
             {/* AI Models Compatibility Section */}
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
+            <div 
+              className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4"
+              onMouseEnter={() => analytics.trackAIModelsSectionViewed(language)}
+            >
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">🤖</span>
                 <h3 className="text-sm font-medium text-blue-900">
@@ -544,7 +547,10 @@ export default function Home() {
         <div className="mt-12 grid md:grid-cols-3 gap-6">
           
           {/* Tips Section */}
-          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-6">
+          <div 
+            className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-6"
+            onMouseEnter={() => analytics.trackTipsSectionViewed(language)}
+          >
             <div className="flex items-center gap-2 mb-4">
               <h3 className="text-sm font-medium text-purple-900">
                 {t.tipsTitle}
@@ -567,7 +573,10 @@ export default function Home() {
                 {t.examples.slice(0, 3).map((example, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setText(example)}
+                    onClick={() => {
+                      setText(example);
+                      analytics.trackExampleUsed(`quick_example_${idx}`, language);
+                    }}
                     className="block w-full text-left text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-100 p-2 rounded transition-colors"
                   >
                     &ldquo;{example}&rdquo;
@@ -578,7 +587,10 @@ export default function Home() {
           </div>
 
           {/* Benefits Section */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+          <div 
+            className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6"
+            onMouseEnter={() => analytics.trackBenefitsSectionViewed(language)}
+          >
             <div className="flex items-center gap-2 mb-4">
               <span className="text-lg">⚡</span>
               <h3 className="text-sm font-medium text-green-900">

@@ -145,12 +145,13 @@ const translations: Record<Language, Translations> = {
     ],
     
     // Tips section  
-    tipsTitle: "Tips for amazing prompts",
+    tipsTitle: "🎯 Tips for amazing prompts",
     tips: [
-      "Be specific about what you want",
-      "Mention your target audience or context", 
-      "Indicate your desired response format",
-      "Use examples to clarify your idea"
+      "Define WHO the AI should be (expert, teacher, consultant)",
+      "Be crystal clear about WHAT you want as output",
+      "Specify your TARGET AUDIENCE and their level of knowledge", 
+      "Choose the perfect FORMAT (list, table, step-by-step, etc.)",
+      "Add CONTEXT about your goal or the situation"
     ],
     
     version: "v2.1",
@@ -232,12 +233,13 @@ const translations: Record<Language, Translations> = {
     ],
     
     // Seção de dicas
-    tipsTitle: "Dicas para prompts incríveis",
+    tipsTitle: "🎯 Dicas para prompts incríveis",
     tips: [
-      "Seja específico sobre o que você quer",
-      "Mencione seu público-alvo ou contexto",
-      "Indique o formato de resposta desejado", 
-      "Use exemplos para clarificar sua ideia"
+      "Defina QUEM a IA deve ser (especialista, professor, consultor)",
+      "Seja cristalino sobre O QUE você quer como resultado",
+      "Especifique seu PÚBLICO-ALVO e nível de conhecimento",
+      "Escolha o FORMATO perfeito (lista, tabela, passo a passo, etc.)",
+      "Adicione CONTEXTO sobre seu objetivo ou situação"
     ],
     
     version: "v2.1",

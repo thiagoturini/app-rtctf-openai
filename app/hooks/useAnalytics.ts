@@ -33,6 +33,18 @@ export interface AnalyticsEvent {
     language: 'en' | 'pt';
   };
   
+  'tips_section_viewed': {
+    language: 'en' | 'pt';
+  };
+  
+  'benefits_section_viewed': {
+    language: 'en' | 'pt';
+  };
+  
+  'ai_models_section_viewed': {
+    language: 'en' | 'pt';
+  };
+  
   // Novos eventos de customização
   'language_changed': {
     from: 'en' | 'pt';
@@ -138,6 +150,18 @@ export function useAnalytics() {
     trackEvent('error_occurred', { error_type: errorType, error_message: errorMessage });
   };
 
+  const trackTipsSectionViewed = (language: 'en' | 'pt' = 'en') => {
+    trackEvent('tips_section_viewed', { language });
+  };
+
+  const trackBenefitsSectionViewed = (language: 'en' | 'pt' = 'en') => {
+    trackEvent('benefits_section_viewed', { language });
+  };
+
+  const trackAIModelsSectionViewed = (language: 'en' | 'pt' = 'en') => {
+    trackEvent('ai_models_section_viewed', { language });
+  };
+
   return {
     trackEvent,
     trackPromptGenerated,
@@ -151,5 +175,8 @@ export function useAnalytics() {
     trackMethodologyViewed,
     trackAIFallback,
     trackError,
+    trackTipsSectionViewed,
+    trackBenefitsSectionViewed,
+    trackAIModelsSectionViewed,
   };
 }
