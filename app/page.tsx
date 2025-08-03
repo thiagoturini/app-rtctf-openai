@@ -42,7 +42,7 @@ export default function Home() {
     let currentSection = '';
     
     for (const line of lines) {
-      if (line.includes('PROMPT CONSOLIDADO') || line.includes('CONSOLIDATED PROMPT')) {
+      if (line.includes('PROMPT CONSOLIDADO:') || line.includes('CONSOLIDATED PROMPT:')) {
         currentSection = 'consolidated';
         continue;
       }
