@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
-// Security and rate limiting
-const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100');
+// Security and rate limiting - more permissive for better UX
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000');
 const RATE_LIMIT_WINDOW = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'); // 15 minutes
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
@@ -31,19 +31,10 @@ function isRateLimited(ip: string): boolean {
 }
 
 function validateRequest(request: Request): { isValid: boolean; error?: string } {
-  // Validate content type
+  // Basic validation only - more permissive for better UX
   const contentType = request.headers.get('content-type');
-  if (!contentType?.includes('application/json')) {
+  if (contentType && !contentType.includes('application/json')) {
     return { isValid: false, error: 'Invalid content type' };
-  }
-  
-  // Validate origin (in production)
-  if (process.env.NODE_ENV === 'production') {
-    const origin = request.headers.get('origin');
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
-    if (origin && !allowedOrigins.includes(origin)) {
-      return { isValid: false, error: 'Invalid origin' };
-    }
   }
   
   return { isValid: true };
