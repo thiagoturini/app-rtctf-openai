@@ -3,43 +3,90 @@ import OpenAI from 'openai';
 
 // Função para transformar texto usando RTCTF sem API externa
 function transformToRTCTF(text: string): string {
-  // Analisar o texto para extrair elementos
-  const isCreationTask = text.toLowerCase().includes('criar') || text.toLowerCase().includes('gerar') || text.toLowerCase().includes('desenvolver');
-  const isAnalysisTask = text.toLowerCase().includes('analis') || text.toLowerCase().includes('avaliar') || text.toLowerCase().includes('estudar');
+  // Analisar o texto para extrair elementos e intenção
+  const lowerText = text.toLowerCase();
+  
+  // Detectar tipo de tarefa
+  const isCreation = lowerText.includes('criar') || lowerText.includes('gerar') || lowerText.includes('desenvolver') || lowerText.includes('fazer') || lowerText.includes('escrever');
+  const isAnalysis = lowerText.includes('analis') || lowerText.includes('avaliar') || lowerText.includes('estudar') || lowerText.includes('comparar');
+  const isExplanation = lowerText.includes('explicar') || lowerText.includes('ensinar') || lowerText.includes('como') || lowerText.includes('aprender');
+  const isPlanning = lowerText.includes('plano') || lowerText.includes('estratégia') || lowerText.includes('organizar');
+  
+  // Detectar domínio/área
+  const isBusinessRelated = lowerText.includes('negócio') || lowerText.includes('empresa') || lowerText.includes('vendas') || lowerText.includes('marketing');
+  const isTechRelated = lowerText.includes('programação') || lowerText.includes('código') || lowerText.includes('software') || lowerText.includes('tecnologia');
+  const isEducationRelated = lowerText.includes('aula') || lowerText.includes('curso') || lowerText.includes('estudar') || lowerText.includes('aprender');
+  
+  // Gerar contexto específico baseado na análise
+  let specificContext = "Este é um pedido que requer atenção aos detalhes e aplicação de melhores práticas.";
+  if (isBusinessRelated) {
+    specificContext = "Contexto profissional/empresarial que requer abordagem estratégica e orientada a resultados.";
+  } else if (isTechRelated) {
+    specificContext = "Contexto técnico que requer precisão, melhores práticas e considerações de implementação.";
+  } else if (isEducationRelated) {
+    specificContext = "Contexto educacional que requer clareza didática e progressão lógica do aprendizado.";
+  }
+  
+  // Gerar resultado esperado baseado no tipo de tarefa
+  let expectedResult = "Obter uma resposta completa e estruturada";
+  if (isCreation) {
+    expectedResult = "Criar/desenvolver algo original e funcional com qualidade profissional";
+  } else if (isAnalysis) {
+    expectedResult = "Obter uma análise detalhada com insights acionáveis e conclusões fundamentadas";
+  } else if (isExplanation) {
+    expectedResult = "Receber uma explicação clara, didática e progressiva do tema";
+  } else if (isPlanning) {
+    expectedResult = "Desenvolver um plano estruturado com etapas claras e cronograma";
+  }
+  
+  // Gerar critérios específicos
+  let specificCriteria = [
+    "Seja preciso e objetivo na resposta",
+    "Use linguagem clara e profissional",
+    "Baseie-se em informações confiáveis e atualizadas",
+    "Mantenha foco no objetivo principal"
+  ];
+  
+  if (isBusinessRelated) {
+    specificCriteria.push("Considere viabilidade comercial e ROI", "Use dados e métricas quando possível");
+  } else if (isTechRelated) {
+    specificCriteria.push("Considere escalabilidade e manutenibilidade", "Inclua melhores práticas e padrões");
+  } else if (isEducationRelated) {
+    specificCriteria.push("Use exemplos práticos e analogias", "Estruture de forma progressiva");
+  }
   
   return `
 **PROMPT OTIMIZADO USANDO METODOLOGIA RTCTF:**
 
 **R (Resultado Desejado):** 
-${isCreationTask ? 'Criar/desenvolver' : isAnalysisTask ? 'Analisar e fornecer insights sobre' : 'Obter uma resposta completa e estruturada sobre'} o que foi solicitado, com qualidade profissional e aplicabilidade prática.
+${expectedResult} sobre o tema solicitado, com aplicabilidade prática e valor agregado.
 
 **T (Tarefa Específica):** 
 ${text}
 
 **C (Contexto Relevante):** 
-Este é um pedido que requer atenção aos detalhes, aplicação de melhores práticas e consideração das nuances do tema. Leve em conta a aplicabilidade prática e a relevância atual do assunto.
+${specificContext} Considere as nuances e complexidades do tema, bem como a aplicabilidade prática no contexto atual.
 
 **C (Critérios e Restrições):** 
-- Seja preciso e objetivo na resposta
-- Use linguagem clara e profissional
-- Baseie-se em informações confiáveis e atualizadas
-- Mantenha foco no objetivo principal
+${specificCriteria.map(c => `- ${c}`).join('\n')}
 - Considere diferentes perspectivas quando relevante
-- Forneça exemplos práticos quando aplicável
+- Forneça exemplos práticos e acionáveis
+- Mantenha um tom profissional e assertivo
 
 **F (Formato de Resposta):** 
 Estruture sua resposta de forma organizada e profissional:
-1. Introdução/contextualização do tema
-2. Desenvolvimento detalhado do conteúdo principal
-3. Conclusões práticas e/ou próximos passos recomendados
-4. Se aplicável, inclua exemplos ou referências relevantes
+1. **Introdução/Contextualização:** Breve overview do tema
+2. **Desenvolvimento Principal:** Conteúdo detalhado e estruturado
+3. **Exemplos Práticos:** Casos concretos ou aplicações
+4. **Conclusões/Próximos Passos:** Insights finais e recomendações acionáveis
+5. **Recursos Adicionais:** Se aplicável, sugira referências ou ferramentas
 
 ---
 
-**PROMPT FINAL OTIMIZADO:**
+**PROMPT FINAL CONSOLIDADO:**
 "${text}
 
-Por favor, forneça uma resposta abrangente e bem estruturada. Organize o conteúdo de forma lógica, use linguagem clara e profissional, e inclua exemplos práticos quando relevante. Certifique-se de abordar todos os aspectos importantes do tema e conclua com insights acionáveis ou próximos passos recomendados."
+Por favor, forneça uma resposta abrangente e bem estruturada seguindo os critérios acima. Organize o conteúdo de forma lógica e didática, use linguagem clara e profissional, e inclua exemplos práticos quando relevante. Certifique-se de abordar todos os aspectos importantes do tema e conclua com insights acionáveis ou próximos passos recomendados. ${isBusinessRelated ? 'Considere aspectos comerciais e de viabilidade.' : ''} ${isTechRelated ? 'Inclua melhores práticas técnicas e considerações de implementação.' : ''} ${isEducationRelated ? 'Use abordagem didática e exemplos esclarecedores.' : ''}"
 `;
 }
 
@@ -55,29 +102,59 @@ export async function POST(request: Request) {
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       
       const prompt = `
-Transforme o texto abaixo em um prompt otimizado usando ESTA metodologia RTCTF específica:
+Você é um especialista em prompt engineering e metodologia RTCTF. Sua tarefa é transformar o texto do usuário em um prompt estruturado e otimizado.
 
-R = Resultado desejado (o que se espera obter)
-T = Tarefa específica (o que deve ser feito)
-C = Contexto relevante (informações de fundo)
-C = Critérios e restrições (diretrizes e limitações)
-F = Formato de resposta (como estruturar a resposta)
+METODOLOGIA RTCTF ESPECÍFICA:
+- R (Resultado): O que exatamente se espera como output/resposta
+- T (Tarefa): A ação específica que deve ser executada  
+- C (Contexto): Informações de background relevantes
+- C (Critérios): Diretrizes, restrições e padrões de qualidade
+- F (Formato): Estrutura e apresentação da resposta
 
-IMPORTANTE: NÃO confunda com outras metodologias RTCTF. Use EXATAMENTE esta definição acima.
+INSTRUÇÕES DETALHADAS:
+1. Analise o texto do usuário e identifique a intenção principal
+2. Extraia ou deduza elementos para cada componente RTCTF
+3. Crie um prompt completo, detalhado e acionável
+4. Use linguagem clara e específica
+5. Inclua exemplos quando relevante
+6. Garanta que o prompt seja autocontido e não ambíguo
 
-Texto do usuário: """${text}"""
+TEXTO DO USUÁRIO: """${text}"""
 
-Crie um prompt estruturado seguindo EXATAMENTE esta metodologia RTCTF (Resultado, Tarefa, Contexto, Critérios, Formato).
+TRANSFORME em um prompt seguindo EXATAMENTE esta estrutura:
+
+**PROMPT OTIMIZADO RTCTF:**
+
+**R (Resultado Desejado):**
+[Descreva o output específico esperado]
+
+**T (Tarefa):**
+[Defina a ação exata a ser executada]
+
+**C (Contexto):**
+[Forneça informações de background relevantes]
+
+**C (Critérios e Restrições):**
+[Liste diretrizes, limitações e padrões de qualidade]
+
+**F (Formato):**
+[Especifique como estruturar a resposta]
+
+**PROMPT FINAL CONSOLIDADO:**
+[Versão concisa e acionável do prompt completo]
+
+Seja específico, detalhado e prático. O prompt final deve ser algo que qualquer LLM possa executar perfeitamente.
 `;
 
       try {
         const completion = await openai.chat.completions.create({
           model: 'gpt-3.5-turbo',
           messages: [
-            { role: 'system', content: 'Você é um assistente especialista em prompt engineering que ajuda a transformar textos usando a metodologia RTCTF.' },
+            { role: 'system', content: 'Você é um especialista mundial em prompt engineering e metodologia RTCTF. Sua especialidade é criar prompts estruturados, detalhados e altamente eficazes que produzem resultados excepcionais quando usados com LLMs.' },
             { role: 'user', content: prompt }
           ],
-          max_tokens: 800,
+          max_tokens: 1200,
+          temperature: 0.7,
         });
 
         const transformed = completion.choices[0].message?.content;
