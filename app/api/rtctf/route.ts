@@ -191,7 +191,9 @@ function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
   else if (isPlanning) format = t.formats.planning;
   
   // Criar prompt consolidado melhorado
-  const consolidatedPrompt = `${text}\n\nPor favor, forneça uma resposta abrangente seguindo a estrutura solicitada. Seja específico, use exemplos práticos quando relevante, e mantenha foco nos aspectos mais importantes e acionáveis do tema.`;
+  const consolidatedPrompt = language === 'pt' 
+    ? `Você é um ${role}. ${text} Considere que ${context}. ${specificContext} Use um tom ${tone}, sendo preciso e focado nos aspectos mais importantes. Apresente a resposta em ${format}.`
+    : `You are an ${role}. ${text} Consider that ${context}. ${specificContext} Use a ${tone} tone, being precise and focused on the most important aspects. Present the response in ${format}.`;
   
   return t.template
     .replace('{role}', role)
