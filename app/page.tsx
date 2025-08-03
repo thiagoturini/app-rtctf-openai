@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAnalytics } from './hooks/useAnalytics';
 import { useTranslations } from './hooks/useTranslations';
 import { useOutputFormat } from './hooks/useOutputFormat';
+import { useDynamicPlaceholder } from './hooks/useDynamicPlaceholder';
 
 interface HistoryItem {
   id: string;
@@ -24,6 +25,7 @@ export default function Home() {
   const analytics = useAnalytics();
   const { language, changeLanguage, t } = useTranslations();
   const { format, changeFormat, formatContent, formatConfig } = useOutputFormat();
+  const dynamicPlaceholder = useDynamicPlaceholder();
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -240,7 +242,7 @@ export default function Home() {
                   onChange={(e) => setText(e.target.value)}
                   rows={8}
                   className="w-full p-4 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-transparent bg-white/70 font-mono placeholder-slate-400 resize-none"
-                  placeholder={t.inputPlaceholder}
+                  placeholder={dynamicPlaceholder || t.inputPlaceholder}
                   required
                 />
                 
@@ -273,21 +275,18 @@ export default function Home() {
               </form>
             </div>
 
-            {/* Quick Examples */}
+            {/* Tech Credibility */}
             <div className="mt-6">
-              <p className="text-xs text-slate-500 mb-2">{t.examplesTitle}</p>
-              <div className="space-y-1">
-                {t.examples.map((example, idx) => (
-                  <button
+              <p className="text-xs text-slate-700 font-medium mb-3">{t.techTitle}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {t.techSpecs.map((spec, idx) => (
+                  <div
                     key={idx}
-                    onClick={() => {
-                      setText(example);
-                      analytics.trackExampleUsed(example, language);
-                    }}
-                    className="block text-left text-xs text-slate-600 hover:text-slate-800 py-1 transition-colors"
+                    className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 rounded px-2 py-1"
                   >
-                    → {example}
-                  </button>
+                    <span className="text-green-500">✓</span>
+                    <span>{spec}</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -439,11 +438,11 @@ export default function Home() {
                 <div className="p-4 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="text-lg font-bold text-slate-800">R</span>
-                    <strong className="text-slate-700 text-sm">{t.result}</strong>
+                    <strong className="text-slate-700 text-sm">{t.role}</strong>
                   </div>
-                  <p className="text-xs text-slate-600 mb-2">{t.resultDesc}</p>
+                  <p className="text-xs text-slate-600 mb-2">{t.roleDesc}</p>
                   <div className="text-xs text-slate-500 italic">
-                    {language === 'pt' ? 'Ex: "Criar uma estratégia detalhada"' : 'Ex: "Create a detailed strategy"'}
+                    {language === 'pt' ? 'Ex: "Você é um especialista em marketing"' : 'Ex: "You are a marketing expert"'}
                   </div>
                 </div>
                 
@@ -465,18 +464,18 @@ export default function Home() {
                   </div>
                   <p className="text-xs text-slate-600 mb-2">{t.contextDesc}</p>
                   <div className="text-xs text-slate-500 italic">
-                    {language === 'pt' ? 'Ex: "Para startup B2B"' : 'Ex: "For B2B startup"'}
+                    {language === 'pt' ? 'Ex: "Para startup B2B no Brasil"' : 'Ex: "For B2B startup in Brazil"'}
                   </div>
                 </div>
                 
                 <div className="p-4 bg-slate-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-bold text-slate-800">C</span>
-                    <strong className="text-slate-700 text-sm">{t.criteria}</strong>
+                    <span className="text-lg font-bold text-slate-800">T</span>
+                    <strong className="text-slate-700 text-sm">{t.tone}</strong>
                   </div>
-                  <p className="text-xs text-slate-600 mb-2">{t.criteriaDesc}</p>
+                  <p className="text-xs text-slate-600 mb-2">{t.toneDesc}</p>
                   <div className="text-xs text-slate-500 italic">
-                    {language === 'pt' ? 'Ex: "Máximo 5 páginas"' : 'Ex: "Maximum 5 pages"'}
+                    {language === 'pt' ? 'Ex: "Tom profissional e técnico"' : 'Ex: "Professional and technical tone"'}
                   </div>
                 </div>
                 
@@ -487,7 +486,7 @@ export default function Home() {
                   </div>
                   <p className="text-xs text-slate-600 mb-2">{t.formatDesc}</p>
                   <div className="text-xs text-slate-500 italic">
-                    {language === 'pt' ? 'Ex: "Apresentação executiva"' : 'Ex: "Executive presentation"'}
+                    {language === 'pt' ? 'Ex: "Lista com 5 itens"' : 'Ex: "List with 5 items"'}
                   </div>
                 </div>
               </div>
@@ -518,8 +517,8 @@ export default function Home() {
                   </h4>
                   <p className="text-xs text-green-700 font-mono bg-white/50 p-3 rounded">
                     {language === 'pt' 
-                      ? '"Desenvolva uma estratégia de marketing digital abrangente para um app B2B de produtividade, incluindo personas, canais, métricas e orçamento para os próximos 6 meses. Estruture como apresentação executiva com slides e dados acionáveis."'
-                      : '"Develop a comprehensive digital marketing strategy for a B2B productivity app, including personas, channels, metrics and budget for the next 6 months. Structure as executive presentation with slides and actionable data."'
+                      ? '"Role: Você é um especialista em marketing digital com 10 anos de experiência em startups B2B.\nTask: Desenvolva uma estratégia completa de marketing para um app de produtividade.\nContext: Startup brasileira, foco em empresas médias, orçamento de R$ 50k.\nTone: Profissional, com dados e métricas, linguagem acessível para executivos.\nFormat: Apresentação com 8 slides: situação atual, personas, canais, cronograma, métricas e orçamento."'
+                      : '"Role: You are a digital marketing expert with 10 years of B2B startup experience.\nTask: Develop a comprehensive marketing strategy for a productivity app.\nContext: Brazilian startup, targeting mid-size companies, R$ 50k budget.\nTone: Professional, data-driven, executive-friendly language.\nFormat: 8-slide presentation: current situation, personas, channels, timeline, metrics and budget."'
                     }
                   </p>
                   <p className="text-xs text-green-600 mt-2">

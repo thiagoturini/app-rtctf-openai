@@ -52,194 +52,159 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-// Função para transformar texto usando RTCTF sem API externa
+// Função para transformar texto usando RTCTF correto (Role, Task, Context, Tone, Format)
 function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
   // Analisar o texto para extrair elementos e intenção
   const lowerText = text.toLowerCase();
   
   // Detectar tipo de tarefa
-  const isCreation = lowerText.includes('criar') || lowerText.includes('gerar') || lowerText.includes('desenvolver') || lowerText.includes('fazer') || lowerText.includes('escrever');
-  const isAnalysis = lowerText.includes('analis') || lowerText.includes('avaliar') || lowerText.includes('estudar') || lowerText.includes('comparar');
-  const isExplanation = lowerText.includes('explicar') || lowerText.includes('ensinar') || lowerText.includes('como') || lowerText.includes('aprender');
-  const isPlanning = lowerText.includes('plano') || lowerText.includes('estratégia') || lowerText.includes('organizar');
+  const isCreation = lowerText.includes('criar') || lowerText.includes('gerar') || lowerText.includes('desenvolver') || lowerText.includes('fazer') || lowerText.includes('create') || lowerText.includes('generate') || lowerText.includes('develop') || lowerText.includes('make');
+  const isAnalysis = lowerText.includes('analis') || lowerText.includes('avaliar') || lowerText.includes('estudar') || lowerText.includes('analy') || lowerText.includes('evaluate') || lowerText.includes('study');
+  const isExplanation = lowerText.includes('explicar') || lowerText.includes('ensinar') || lowerText.includes('como') || lowerText.includes('explain') || lowerText.includes('teach') || lowerText.includes('how');
+  const isPlanning = lowerText.includes('plano') || lowerText.includes('estratégia') || lowerText.includes('organizar') || lowerText.includes('plan') || lowerText.includes('strategy') || lowerText.includes('organize');
   
   // Detectar domínio/área
   const isBusinessRelated = lowerText.includes('negócio') || lowerText.includes('empresa') || lowerText.includes('vendas') || lowerText.includes('marketing') || 
-                           lowerText.includes('business') || lowerText.includes('company') || lowerText.includes('sales') || lowerText.includes('marketing');
+                           lowerText.includes('business') || lowerText.includes('company') || lowerText.includes('sales');
   const isTechRelated = lowerText.includes('programação') || lowerText.includes('código') || lowerText.includes('software') || lowerText.includes('tecnologia') ||
                        lowerText.includes('programming') || lowerText.includes('code') || lowerText.includes('technology') || lowerText.includes('development');
   const isEducationRelated = lowerText.includes('aula') || lowerText.includes('curso') || lowerText.includes('estudar') || lowerText.includes('aprender') ||
                             lowerText.includes('lesson') || lowerText.includes('course') || lowerText.includes('learn') || lowerText.includes('teach');
   
-  // Templates de idioma
+  // Templates RTCTF corretos
   const templates = {
     pt: {
+      roles: {
+        default: "especialista experiente na área",
+        business: "consultor de negócios com 10+ anos em startups e empresas",
+        tech: "desenvolvedor sênior e arquiteto de software com expertise técnica",
+        education: "educador experiente e especialista em ensino didático"
+      },
       contexts: {
-        default: "Este é um pedido que requer atenção aos detalhes e aplicação de melhores práticas.",
-        business: "Contexto profissional/empresarial que requer abordagem estratégica e orientada a resultados.",
-        tech: "Contexto técnico que requer precisão, melhores práticas e considerações de implementação.", 
-        education: "Contexto educacional que requer clareza didática e progressão lógica do aprendizado."
+        default: "público geral que busca informações claras e acionáveis",
+        business: "ambiente empresarial brasileiro, com foco em resultados e ROI",
+        tech: "contexto de desenvolvimento e implementação de soluções tecnológicas",
+        education: "ambiente educacional, priorizando aprendizado progressivo"
       },
-      results: {
-        default: "Obter uma resposta completa e estruturada",
-        creation: "Criar/desenvolver algo original e funcional com qualidade profissional",
-        analysis: "Obter uma análise detalhada com insights acionáveis e conclusões fundamentadas",
-        explanation: "Receber uma explicação clara, didática e progressiva do tema",
-        planning: "Desenvolver um plano estruturado com etapas claras e cronograma"
+      tones: {
+        default: "profissional, claro e objetivo",
+        business: "executivo, orientado a dados e resultados",
+        tech: "técnico mas acessível, com exemplos práticos",
+        education: "didático, inspirador e encorajador"
       },
-      criteria: {
-        base: [
-          "Seja preciso e objetivo na resposta",
-          "Use linguagem clara e profissional", 
-          "Baseie-se em informações confiáveis e atualizadas",
-          "Mantenha foco no objetivo principal"
-        ],
-        business: ["Considere viabilidade comercial e ROI", "Use dados e métricas quando possível"],
-        tech: ["Considere escalabilidade e manutenibilidade", "Inclua melhores práticas e padrões"],
-        education: ["Use exemplos práticos e analogias", "Estruture de forma progressiva"]
+      formats: {
+        creation: "estrutura em seções: planejamento, desenvolvimento, implementação e próximos passos",
+        analysis: "formato analítico: situação atual, análise detalhada, insights e recomendações",
+        explanation: "formato educativo: introdução, conceitos principais, exemplos e resumo",
+        planning: "formato de planejamento: objetivos, etapas, cronograma e métricas",
+        default: "texto bem estruturado com introdução, desenvolvimento e conclusão"
       },
-      template: `
-**PROMPT OTIMIZADO USANDO METODOLOGIA RTCTF:**
+      template: `**PROMPT OTIMIZADO - METODOLOGIA RTCTF:**
 
-**R (Resultado Desejado):** 
-{expectedResult} sobre o tema solicitado, com aplicabilidade prática e valor agregado.
+**R (Role/Papel):** Você é um {role}.
 
-**T (Tarefa Específica):** 
-{text}
+**T (Task/Tarefa):** {task}
 
-**C (Contexto Relevante):** 
-{specificContext} Considere as nuances e complexidades do tema, bem como a aplicabilidade prática no contexto atual.
+**C (Context/Contexto):** Considere que o público-alvo é {context}. {specificContext}
 
-**C (Critérios e Restrições):** 
-{criteria}
-- Considere diferentes perspectivas quando relevante
-- Forneça exemplos práticos e acionáveis
-- Mantenha um tom profissional e assertivo
+**T (Tone/Tom):** Use um tom {tone}. Seja preciso, prático e mantenha foco nos aspectos mais importantes.
 
-**F (Formato de Resposta):** 
-Estruture sua resposta de forma organizada e profissional:
-1. **Introdução/Contextualização:** Breve overview do tema
-2. **Desenvolvimento Principal:** Conteúdo detalhado e estruturado
-3. **Exemplos Práticos:** Casos concretos ou aplicações
-4. **Conclusões/Próximos Passos:** Insights finais e recomendações acionáveis
-5. **Recursos Adicionais:** Se aplicável, sugira referências ou ferramentas
+**F (Format/Formato):** {format}
 
 ---
-
-**PROMPT FINAL CONSOLIDADO:**
-"{text}
-
-Por favor, forneça uma resposta abrangente e bem estruturada seguindo os critérios acima. Organize o conteúdo de forma lógica e didática, use linguagem clara e profissional, e inclua exemplos práticos quando relevante. Certifique-se de abordar todos os aspectos importantes do tema e conclua com insights acionáveis ou próximos passos recomendados. {contextualHints}"
-`
+**PROMPT CONSOLIDADO:**
+"{consolidatedPrompt}"`
     },
     en: {
+      roles: {
+        default: "experienced expert in the field",
+        business: "business consultant with 10+ years in startups and companies",
+        tech: "senior developer and software architect with technical expertise",
+        education: "experienced educator and specialist in didactic teaching"
+      },
       contexts: {
-        default: "This is a request that requires attention to detail and application of best practices.",
-        business: "Professional/business context that requires strategic approach and results-oriented thinking.",
-        tech: "Technical context that requires precision, best practices and implementation considerations.",
-        education: "Educational context that requires didactic clarity and logical learning progression."
+        default: "general audience seeking clear and actionable information",
+        business: "business environment focused on results and ROI",
+        tech: "development and implementation of technological solutions context",
+        education: "educational environment prioritizing progressive learning"
       },
-      results: {
-        default: "Obtain a complete and structured response",
-        creation: "Create/develop something original and functional with professional quality", 
-        analysis: "Obtain a detailed analysis with actionable insights and well-founded conclusions",
-        explanation: "Receive a clear, didactic and progressive explanation of the topic",
-        planning: "Develop a structured plan with clear steps and timeline"
+      tones: {
+        default: "professional, clear and objective",
+        business: "executive-level, data-driven and results-oriented",
+        tech: "technical but accessible, with practical examples",
+        education: "didactic, inspiring and encouraging"
       },
-      criteria: {
-        base: [
-          "Be precise and objective in the response",
-          "Use clear and professional language",
-          "Base on reliable and updated information", 
-          "Maintain focus on the main objective"
-        ],
-        business: ["Consider commercial viability and ROI", "Use data and metrics when possible"],
-        tech: ["Consider scalability and maintainability", "Include best practices and standards"],
-        education: ["Use practical examples and analogies", "Structure progressively"]
+      formats: {
+        creation: "structure in sections: planning, development, implementation and next steps",
+        analysis: "analytical format: current situation, detailed analysis, insights and recommendations",
+        explanation: "educational format: introduction, main concepts, examples and summary",
+        planning: "planning format: objectives, stages, timeline and metrics",
+        default: "well-structured text with introduction, development and conclusion"
       },
-      template: `
-**OPTIMIZED PROMPT USING RTCTF METHODOLOGY:**
+      template: `**OPTIMIZED PROMPT - RTCTF METHODOLOGY:**
 
-**R (Desired Result):** 
-{expectedResult} about the requested topic, with practical applicability and added value.
+**R (Role):** You are an {role}.
 
-**T (Specific Task):** 
-{text}
+**T (Task):** {task}
 
-**C (Relevant Context):** 
-{specificContext} Consider the nuances and complexities of the topic, as well as practical applicability in the current context.
+**C (Context):** Consider that the target audience is {context}. {specificContext}
 
-**C (Criteria and Restrictions):** 
-{criteria}
-- Consider different perspectives when relevant
-- Provide practical and actionable examples
-- Maintain a professional and assertive tone
+**T (Tone):** Use a {tone} tone. Be precise, practical and maintain focus on the most important aspects.
 
-**F (Response Format):** 
-Structure your response in an organized and professional way:
-1. **Introduction/Contextualization:** Brief overview of the topic
-2. **Main Development:** Detailed and structured content
-3. **Practical Examples:** Concrete cases or applications
-4. **Conclusions/Next Steps:** Final insights and actionable recommendations
-5. **Additional Resources:** If applicable, suggest references or tools
+**F (Format):** {format}
 
 ---
-
-**FINAL CONSOLIDATED PROMPT:**
-"{text}
-
-Please provide a comprehensive and well-structured response following the criteria above. Organize the content in a logical and didactic way, use clear and professional language, and include practical examples when relevant. Make sure to address all important aspects of the topic and conclude with actionable insights or recommended next steps. {contextualHints}"
-`
+**CONSOLIDATED PROMPT:**
+"{consolidatedPrompt}"`
     }
   };
   
-  
   const t = templates[language];
   
-  // Gerar contexto específico baseado na análise
-  let specificContext = t.contexts.default;
+  // Determinar role baseado no domínio
+  let role = t.roles.default;
+  if (isBusinessRelated) role = t.roles.business;
+  else if (isTechRelated) role = t.roles.tech;
+  else if (isEducationRelated) role = t.roles.education;
+  
+  // Determinar context baseado no domínio
+  let context = t.contexts.default;
+  let specificContext = "";
   if (isBusinessRelated) {
-    specificContext = t.contexts.business;
+    context = t.contexts.business;
+    specificContext = language === 'pt' ? "Foque em viabilidade comercial e resultados mensuráveis." : "Focus on commercial viability and measurable results.";
   } else if (isTechRelated) {
-    specificContext = t.contexts.tech;
+    context = t.contexts.tech;
+    specificContext = language === 'pt' ? "Inclua melhores práticas e considerações de implementação." : "Include best practices and implementation considerations.";
   } else if (isEducationRelated) {
-    specificContext = t.contexts.education;
+    context = t.contexts.education;
+    specificContext = language === 'pt' ? "Use exemplos práticos e progressão lógica." : "Use practical examples and logical progression.";
   }
-
-  // Gerar resultado esperado baseado no tipo de tarefa
-  let expectedResult = t.results.default;
-  if (isCreation) {
-    expectedResult = t.results.creation;
-  } else if (isAnalysis) {
-    expectedResult = t.results.analysis;
-  } else if (isExplanation) {
-    expectedResult = t.results.explanation;
-  } else if (isPlanning) {
-    expectedResult = t.results.planning;
-  }
-
-  // Gerar critérios específicos
-  const specificCriteria = [
-    ...t.criteria.base,
-    ...(isBusinessRelated ? t.criteria.business : []),
-    ...(isTechRelated ? t.criteria.tech : []),
-    ...(isEducationRelated ? t.criteria.education : [])
-  ];
-
-  // Gerar hints contextuais
-  const contextualHints = [
-    isBusinessRelated ? (language === 'pt' ? 'Considere aspectos comerciais e de viabilidade.' : 'Consider commercial and viability aspects.') : '',
-    isTechRelated ? (language === 'pt' ? 'Inclua melhores práticas técnicas e considerações de implementação.' : 'Include technical best practices and implementation considerations.') : '',
-    isEducationRelated ? (language === 'pt' ? 'Use abordagem didática e exemplos esclarecedores.' : 'Use didactic approach and enlightening examples.') : ''
-  ].filter(Boolean).join(' ');
-
+  
+  // Determinar tone baseado no domínio
+  let tone = t.tones.default;
+  if (isBusinessRelated) tone = t.tones.business;
+  else if (isTechRelated) tone = t.tones.tech;
+  else if (isEducationRelated) tone = t.tones.education;
+  
+  // Determinar format baseado no tipo de tarefa
+  let format = t.formats.default;
+  if (isCreation) format = t.formats.creation;
+  else if (isAnalysis) format = t.formats.analysis;
+  else if (isExplanation) format = t.formats.explanation;
+  else if (isPlanning) format = t.formats.planning;
+  
+  // Criar prompt consolidado melhorado
+  const consolidatedPrompt = `${text}\n\nPor favor, forneça uma resposta abrangente seguindo a estrutura solicitada. Seja específico, use exemplos práticos quando relevante, e mantenha foco nos aspectos mais importantes e acionáveis do tema.`;
+  
   return t.template
-    .replace('{expectedResult}', expectedResult)
-    .replace('{text}', text)
+    .replace('{role}', role)
+    .replace('{task}', text)
+    .replace('{context}', context)
     .replace('{specificContext}', specificContext)
-    .replace('{criteria}', specificCriteria.map(c => `- ${c}`).join('\n'))
-    .replace(/{text}/g, text)
-    .replace('{contextualHints}', contextualHints);
+    .replace('{tone}', tone)
+    .replace('{format}', format)
+    .replace('{consolidatedPrompt}', consolidatedPrompt);
 }
 
 export async function POST(request: Request) {
@@ -291,92 +256,82 @@ export async function POST(request: Request) {
       
       const promptTemplates = {
         en: `
-You are an expert in prompt engineering and RTCTF methodology. Your task is to transform the user's text into a structured and optimized prompt.
+You are an expert in prompt engineering and RTCTF methodology. Transform user input into structured, effective prompts.
 
-SPECIFIC RTCTF METHODOLOGY:
-- R (Result): What exactly is expected as output/response
-- T (Task): The specific action that should be executed
-- C (Context): Relevant background information
-- C (Criteria): Guidelines, restrictions and quality standards
-- F (Format): Structure and presentation of the response
+RTCTF METHODOLOGY (CORRECT VERSION):
+- R (Role): Who the AI should be or what persona to adopt
+- T (Task): The specific action to be performed
+- C (Context): Relevant background information to help AI understand
+- T (Tone): Writing style - formal, casual, technical, educational, etc.
+- F (Format): Response structure - list, table, paragraph, code, etc.
 
-DETAILED INSTRUCTIONS:
-1. Analyze the user's text and identify the main intention
-2. Extract or deduce elements for each RTCTF component
-3. Create a complete, detailed and actionable prompt
-4. Use clear and specific language
-5. Include examples when relevant
-6. Ensure the prompt is self-contained and unambiguous
+INSTRUCTIONS:
+1. Analyze the user's input to identify intent and domain
+2. Determine appropriate Role based on the topic (expert, consultant, teacher, etc.)
+3. Clearly define the Task to be executed
+4. Provide relevant Context for better understanding
+5. Set appropriate Tone for the audience and purpose
+6. Specify the desired Format for the response
 
-USER TEXT: """${text}"""
+USER INPUT: """${text}"""
 
-TRANSFORM into a prompt following EXACTLY this structure:
+Transform into a structured RTCTF prompt following EXACTLY this structure:
 
 **OPTIMIZED RTCTF PROMPT:**
 
-**R (Desired Result):**
-[Describe the specific expected output]
+**R (Role):** You are a [specific expert/professional role]
 
-**T (Task):**
-[Define the exact action to be executed]
+**T (Task):** [Clear, specific action to perform]
 
-**C (Context):**
-[Provide relevant background information]
+**C (Context):** [Relevant background information and target audience]
 
-**C (Criteria and Restrictions):**
-[List guidelines, limitations and quality standards]
+**T (Tone):** [Appropriate writing style for the context]
 
-**F (Format):**
-[Specify how to structure the response]
+**F (Format):** [Specific response structure]
 
-**FINAL CONSOLIDATED PROMPT:**
-[Concise and actionable version of the complete prompt]
+**CONSOLIDATED PROMPT:**
+[A single, clear prompt that incorporates all RTCTF elements naturally]
 
-Be specific, detailed and practical. The final prompt should be something any LLM can execute perfectly.
+Be specific and actionable. The final prompt should deliver exceptional results when used with any LLM.
 `,
         pt: `
-Você é um especialista em prompt engineering e metodologia RTCTF. Sua tarefa é transformar o texto do usuário em um prompt estruturado e otimizado.
+Você é um especialista em prompt engineering e metodologia RTCTF. Transforme a entrada do usuário em prompts estruturados e eficazes.
 
-METODOLOGIA RTCTF ESPECÍFICA:
-- R (Resultado): O que exatamente se espera como output/resposta
-- T (Tarefa): A ação específica que deve ser executada  
-- C (Contexto): Informações de background relevantes
-- C (Critérios): Diretrizes, restrições e padrões de qualidade
-- F (Formato): Estrutura e apresentação da resposta
+METODOLOGIA RTCTF (VERSÃO CORRETA):
+- R (Role/Papel): Quem a IA deve ser ou qual persona adotar
+- T (Task/Tarefa): A ação específica a ser executada
+- C (Context/Contexto): Informações de background relevantes para ajudar a IA
+- T (Tone/Tom): Estilo de escrita - formal, casual, técnico, educativo, etc.
+- F (Format/Formato): Estrutura da resposta - lista, tabela, parágrafo, código, etc.
 
-INSTRUÇÕES DETALHADAS:
-1. Analise o texto do usuário e identifique a intenção principal
-2. Extraia ou deduza elementos para cada componente RTCTF
-3. Crie um prompt completo, detalhado e acionável
-4. Use linguagem clara e específica
-5. Inclua exemplos quando relevante
-6. Garanta que o prompt seja autocontido e não ambíguo
+INSTRUÇÕES:
+1. Analise a entrada do usuário para identificar intenção e domínio
+2. Determine o Role apropriado baseado no tópico (especialista, consultor, professor, etc.)
+3. Defina claramente a Task a ser executada
+4. Forneça Context relevante para melhor compreensão
+5. Defina o Tone apropriado para o público e propósito
+6. Especifique o Format desejado para a resposta
 
-TEXTO DO USUÁRIO: """${text}"""
+ENTRADA DO USUÁRIO: """${text}"""
 
-TRANSFORME em um prompt seguindo EXATAMENTE esta estrutura:
+Transforme em um prompt RTCTF estruturado seguindo EXATAMENTE esta estrutura:
 
 **PROMPT OTIMIZADO RTCTF:**
 
-**R (Resultado Desejado):**
-[Descreva o output específico esperado]
+**R (Role/Papel):** Você é um [papel específico de especialista/profissional]
 
-**T (Tarefa):**
-[Defina a ação exata a ser executada]
+**T (Task/Tarefa):** [Ação clara e específica a ser executada]
 
-**C (Contexto):**
-[Forneça informações de background relevantes]
+**C (Context/Contexto):** [Informações de background relevantes e público-alvo]
 
-**C (Critérios e Restrições):**
-[Liste diretrizes, limitações e padrões de qualidade]
+**T (Tone/Tom):** [Estilo de escrita apropriado para o contexto]
 
-**F (Formato):**
-[Especifique como estruturar a resposta]
+**F (Format/Formato):** [Estrutura específica da resposta]
 
-**PROMPT FINAL CONSOLIDADO:**
-[Versão concisa e acionável do prompt completo]
+**PROMPT CONSOLIDADO:**
+[Um prompt único e claro que incorpora todos os elementos RTCTF naturalmente]
 
-Seja específico, detalhado e prático. O prompt final deve ser algo que qualquer LLM possa executar perfeitamente.
+Seja específico e acionável. O prompt final deve entregar resultados excepcionais quando usado com qualquer LLM.
 `
       };
 

@@ -36,17 +36,24 @@ interface Translations {
   methodologyTitle: string;
   methodologyDescription: string;
   
-  // RTCTF Components
-  result: string;
-  resultDesc: string;
+  // RTCTF Components (Correct methodology: Role, Task, Context, Tone, Format)
+  role: string;
+  roleDesc: string;
   task: string;
   taskDesc: string;
   context: string;
   contextDesc: string;
-  criteria: string;
-  criteriaDesc: string;
+  tone: string;
+  toneDesc: string;
   format: string;
   formatDesc: string;
+  
+  // Tech credibility section
+  techTitle: string;
+  techSpecs: string[];
+  
+  // Dynamic placeholder examples
+  placeholderExamples: string[];
   
   // Footer
   version: string;
@@ -90,18 +97,40 @@ const translations: Record<Language, Translations> = {
     ],
     
     methodologyTitle: "About RTCTF Methodology",
-    methodologyDescription: "The RTCTF methodology provides a structured framework for creating precise, effective prompts that deliver consistent results. Each component serves a specific purpose in guiding AI responses.",
+    methodologyDescription: "RTCTF methodology structures prompt engineering for clear communication with AI models. Follow: Role (who AI should be), Task (what to do), Context (background info), Tone (writing style), Format (response structure).",
     
-    result: "Result",
-    resultDesc: "Define the expected outcome or goal",
+    // RTCTF Components - Correct methodology
+    role: "Role",
+    roleDesc: "Who the AI should be or what persona to adopt",
     task: "Task", 
-    taskDesc: "Specify the exact action to be performed",
+    taskDesc: "The specific action to be performed",
     context: "Context",
-    contextDesc: "Provide relevant background information",
-    criteria: "Criteria",
-    criteriaDesc: "Set constraints, guidelines and limits",
+    contextDesc: "Background information to help AI understand",
+    tone: "Tone",
+    toneDesc: "Writing style: formal, casual, technical, educational",
     format: "Format",
-    formatDesc: "Specify the desired response structure",
+    formatDesc: "Response structure: list, table, paragraph, code",
+    
+    // Tech credibility
+    techTitle: "🚀 Powered by Advanced AI Technology",
+    techSpecs: [
+      "OpenAI GPT-4 Integration",
+      "Real-time Prompt Optimization",
+      "Multi-language Support (EN/PT)",
+      "Export: TXT, Markdown, YAML",
+      "Rate-limited Secure API",
+      "Next.js 15 + TypeScript"
+    ],
+    
+    // Dynamic examples for input placeholder
+    placeholderExamples: [
+      "Create a marketing strategy for my startup...",
+      "Explain quantum computing to beginners...",
+      "Analyze this sales data and provide insights...",
+      "Write a professional email to investors...",
+      "Plan a team building workshop agenda...",
+      "Generate creative ideas for app features..."
+    ],
     
     version: "v2.1",
     
@@ -142,18 +171,40 @@ const translations: Record<Language, Translations> = {
     ],
     
     methodologyTitle: "Sobre a Metodologia RTCTF",
-    methodologyDescription: "A metodologia RTCTF oferece uma estrutura para criar prompts precisos e eficazes que entregam resultados consistentes. Cada componente tem um propósito específico em guiar as respostas da IA.",
+    methodologyDescription: "RTCTF estrutura prompt engineering para comunicação clara com IAs. Siga: Role (quem a IA deve ser), Task (o que fazer), Context (informações de fundo), Tone (estilo de escrita), Format (estrutura da resposta).",
     
-    result: "Resultado",
-    resultDesc: "Define o resultado ou objetivo esperado",
-    task: "Tarefa",
-    taskDesc: "Especifica a ação exata a ser executada", 
-    context: "Contexto",
-    contextDesc: "Fornece informações de contexto relevantes",
-    criteria: "Critérios",
-    criteriaDesc: "Define restrições, diretrizes e limites",
-    format: "Formato",
-    formatDesc: "Especifica a estrutura de resposta desejada",
+    // Componentes RTCTF - Metodologia correta
+    role: "Role (Papel)",
+    roleDesc: "Quem a IA deve ser ou qual persona adotar",
+    task: "Task (Tarefa)",
+    taskDesc: "A ação específica a ser executada", 
+    context: "Context (Contexto)",
+    contextDesc: "Informações de fundo para ajudar a IA",
+    tone: "Tone (Tom)",
+    toneDesc: "Estilo de escrita: formal, casual, técnico, educativo",
+    format: "Format (Formato)",
+    formatDesc: "Estrutura da resposta: lista, tabela, parágrafo, código",
+    
+    // Credibilidade tecnológica
+    techTitle: "🚀 Tecnologia de IA Avançada",
+    techSpecs: [
+      "Integração OpenAI GPT-4",
+      "Otimização de Prompts em Tempo Real",
+      "Suporte Multi-idioma (EN/PT)",
+      "Export: TXT, Markdown, YAML",
+      "API Segura com Rate Limiting",
+      "Next.js 15 + TypeScript"
+    ],
+    
+    // Exemplos dinâmicos para placeholder
+    placeholderExamples: [
+      "Criar uma estratégia de marketing para minha startup...",
+      "Explicar computação quântica para iniciantes...",
+      "Analisar estes dados de vendas e dar insights...",
+      "Escrever um email profissional para investidores...",
+      "Planejar agenda de workshop de team building...",
+      "Gerar ideias criativas para funcionalidades de app..."
+    ],
     
     version: "v2.1",
     
