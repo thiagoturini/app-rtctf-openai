@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "name": "rtctf-transformer",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  },
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  },
+  "functions": {
+    "app/api/rtctf/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}
