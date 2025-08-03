@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAnalytics } from './hooks/useAnalytics';
 
 interface HistoryItem {
   id: string;
@@ -17,6 +18,9 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
+  // Initialize analytics
+  const analytics = useAnalytics();
+
   // Load history from localStorage on mount
   useEffect(() => {
     try {
@@ -28,6 +32,28 @@ export default function Home() {
       console.error('Error loading history:', error);
     }
   }, []);
+
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Copy shortcut (Ctrl+C or Cmd+C) when result is available and not in textarea
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && result && 
+          !(e.target as HTMLElement)?.tagName?.toLowerCase().includes('textarea')) {
+        e.preventDefault();
+        // Copy and track directly here
+        if (result) {
+          navigator.clipboard.writeText(result);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+          // Use analytics directly without dependency issue
+          analytics.trackPromptCopied('keyboard_shortcut');
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [result]); // Remove analytics dependency to avoid re-creating the effect
 
   // Save history to localStorage
   const saveToHistory = (input: string, output: string) => {
@@ -66,9 +92,21 @@ export default function Home() {
       
       if (prompt && !data.error) {
         saveToHistory(text, prompt);
+        // Track successful prompt generation
+        analytics.trackPromptGenerated(data.source || 'Local', text, prompt);
+        
+        // Track AI fallback if it occurred
+        if (data.source === 'Local (AI unavailable)') {
+          analytics.trackAIFallback('api_error');
+        }
+      } else if (data.error) {
+        // Track error
+        analytics.trackError('api_error', data.error);
       }
-    } catch (error) {
-      setResult('Erro ao conectar com a API');
+    } catch {
+      const errorMessage = 'Erro ao conectar com a API';
+      setResult(errorMessage);
+      analytics.trackError('network_error', errorMessage);
     }
     setLoading(false);
   };
@@ -78,6 +116,7 @@ export default function Home() {
       await navigator.clipboard.writeText(result);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      analytics.trackPromptCopied('copy_button');
     }
   };
 
@@ -91,6 +130,8 @@ export default function Home() {
     setText(item.input);
     setResult(item.output);
     setShowHistory(false);
+    // Track history item reuse
+    analytics.trackHistoryItemReused(item.timestamp);
   };
 
   const clearHistory = () => {
@@ -109,6 +150,8 @@ export default function Home() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      // Track download action
+      analytics.trackPromptDownloaded();
     }
   };
 
@@ -124,7 +167,13 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setShowHistory(!showHistory)}
+                onClick={() => {
+                  setShowHistory(!showHistory);
+                  if (!showHistory) {
+                    // Track when user opens history
+                    analytics.trackHistoryViewed(history.length);
+                  }
+                }}
                 className="text-xs text-slate-600 hover:text-slate-800 px-3 py-1.5 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
               >
                 History ({history.length})
@@ -197,7 +246,10 @@ export default function Home() {
                 ].map((example, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setText(example)}
+                    onClick={() => {
+                      setText(example);
+                      analytics.trackExampleUsed(example);
+                    }}
                     className="block text-left text-xs text-slate-600 hover:text-slate-800 py-1 transition-colors"
                   >
                     → {example}
