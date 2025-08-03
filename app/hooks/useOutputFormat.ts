@@ -131,8 +131,8 @@ function convertToJSON(content: string): string {
     const cleanContent = convertToText(content);
     const lines = cleanContent.split('\n').filter(line => line.trim());
     
-    let jsonObject: any = {};
-    let paragraphs: string[] = [];
+    const jsonObject: Record<string, unknown> = {};
+    const paragraphs: string[] = [];
     let currentListKey = '';
     let currentList: string[] = [];
     

@@ -6,11 +6,11 @@ Uma aplicação web moderna que transforma textos simples em prompts otimizados 
 
 **RTCTF** é uma metodologia para criar prompts estruturados e eficazes:
 
-- **R** - Resultado desejado
-- **T** - Tarefa específica  
-- **C** - Contexto relevante
-- **C** - Critérios e restrições
-- **F** - Formato de resposta
+- **R** - Role (Papel) - Quem a IA deve ser ou qual persona adotar
+- **T** - Task (Tarefa) - A ação específica a ser executada  
+- **C** - Context (Contexto) - Informações de background relevantes
+- **T** - Tone (Tom) - Estilo de escrita apropriado para o contexto
+- **F** - Format (Formato) - Estrutura específica da resposta
 
 ## ✨ Funcionalidades
 

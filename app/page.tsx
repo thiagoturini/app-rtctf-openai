@@ -22,7 +22,6 @@ export default function Home() {
   const [copiedOptimized, setCopiedOptimized] = useState(false);
   const [copiedConsolidated, setCopiedConsolidated] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [showHistory, setShowHistory] = useState(false);
 
   // Initialize hooks
   const analytics = useAnalytics();
@@ -98,7 +97,7 @@ export default function Home() {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Copy shortcut (Ctrl+C or Cmd+C) when result is available and not in textarea
       if ((e.ctrlKey || e.metaKey) && e.key === 'c' && (optimizedPrompt || consolidatedPrompt) && 
-          !(e.target as HTMLElement)?.tagName?.toLowerCase().includes('textarea')) {
+          !((e.target as HTMLElement | null)?.tagName?.toLowerCase().includes('textarea'))) {
         e.preventDefault();
         // Copy optimized prompt by default
         if (optimizedPrompt) {
@@ -198,22 +197,6 @@ export default function Home() {
     setConsolidatedPrompt('');
     setCopiedOptimized(false);
     setCopiedConsolidated(false);
-  };
-
-  const loadFromHistory = (item: HistoryItem) => {
-    setText(item.input);
-    const parsed = parsePromptResult(item.output);
-    setOptimizedPrompt(parsed.optimized);
-    setConsolidatedPrompt(parsed.consolidated);
-    setResult(item.output);
-    setShowHistory(false);
-    // Track history item reuse
-    analytics.trackHistoryItemReused(item.timestamp);
-  };
-
-  const clearHistory = () => {
-    setHistory([]);
-    localStorage.removeItem('rtctf-history');
   };
 
   return (
@@ -410,7 +393,7 @@ export default function Home() {
                     <span className="text-xs text-slate-500">{t.formatLabel}:</span>
                     <select
                       value={format}
-                      onChange={(e) => {
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         const oldFormat = format;
                         const newFormat = e.target.value as 'txt' | 'md' | 'json';
                         changeFormat(newFormat);
@@ -489,7 +472,7 @@ export default function Home() {
                     <span className="text-xs text-slate-500">{t.formatLabel}:</span>
                     <select
                       value={format}
-                      onChange={(e) => {
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         const oldFormat = format;
                         const newFormat = e.target.value as 'txt' | 'md' | 'json';
                         changeFormat(newFormat);
