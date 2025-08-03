@@ -77,7 +77,7 @@ export default function Home() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      analytics.trackPromptDownloaded(format as any);
+      analytics.trackPromptDownloaded(format);
     }
   };
 
@@ -105,7 +105,7 @@ export default function Home() {
           navigator.clipboard.writeText(optimizedPrompt);
           setCopiedOptimized(true);
           setTimeout(() => setCopiedOptimized(false), 2000);
-          analytics.trackPromptCopied('keyboard_shortcut', format as any);
+          analytics.trackPromptCopied('keyboard_shortcut', format);
         }
       }
     };
@@ -158,7 +158,7 @@ export default function Home() {
         
         saveToHistory(text, prompt);
         // Track successful prompt generation with new parameters
-        analytics.trackPromptGenerated(data.source || 'Local', text, prompt, format as any, language);
+        analytics.trackPromptGenerated(data.source || 'Local', text, prompt, format, language);
         
         // Track AI fallback if it occurred
         if (data.source === 'Local (AI unavailable)') {
@@ -187,7 +187,7 @@ export default function Home() {
         setCopiedConsolidated(true);
         setTimeout(() => setCopiedConsolidated(false), 2000);
       }
-      analytics.trackPromptCopied('copy_button', format as any);
+      analytics.trackPromptCopied('copy_button', format);
     }
   };
 
@@ -414,7 +414,7 @@ export default function Home() {
                         const oldFormat = format;
                         const newFormat = e.target.value as 'txt' | 'md' | 'json';
                         changeFormat(newFormat);
-                        analytics.trackOutputFormatChanged(oldFormat as any, newFormat as any);
+                        analytics.trackOutputFormatChanged(oldFormat, newFormat);
                       }}
                       className="text-xs border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-slate-400 focus:border-transparent"
                     >
@@ -493,7 +493,7 @@ export default function Home() {
                         const oldFormat = format;
                         const newFormat = e.target.value as 'txt' | 'md' | 'json';
                         changeFormat(newFormat);
-                        analytics.trackOutputFormatChanged(oldFormat as any, newFormat as any);
+                        analytics.trackOutputFormatChanged(oldFormat, newFormat);
                       }}
                       className="text-xs border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-slate-400 focus:border-transparent"
                     >

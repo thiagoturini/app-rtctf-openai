@@ -6,18 +6,18 @@ export interface AnalyticsEvent {
     source: 'AI' | 'Local' | 'AI Enhanced' | 'Local (AI unavailable)';
     input_length: number;
     output_length: number;
-    output_format: 'txt' | 'md' | 'yaml';
+    output_format: 'txt' | 'md' | 'json';
     language: 'en' | 'pt';
   };
   
   // Eventos de interação
   'prompt_copied': {
     source: 'copy_button' | 'keyboard_shortcut';
-    format: 'txt' | 'md' | 'yaml';
+    format: 'txt' | 'md' | 'json';
   };
   
   'prompt_downloaded': {
-    format: 'txt' | 'md' | 'yaml';
+    format: 'txt' | 'md' | 'json';
   };
   
   'history_viewed': {
@@ -40,8 +40,8 @@ export interface AnalyticsEvent {
   };
   
   'output_format_changed': {
-    from: 'txt' | 'md' | 'yaml';
-    to: 'txt' | 'md' | 'yaml';
+    from: 'txt' | 'md' | 'json';
+    to: 'txt' | 'md' | 'json';
   };
   
   'methodology_viewed': {
@@ -76,7 +76,7 @@ export function useAnalytics() {
     source: AnalyticsEvent['prompt_generated']['source'],
     inputText: string,
     outputText: string,
-    outputFormat: 'txt' | 'md' | 'yaml' = 'txt',
+    outputFormat: 'txt' | 'md' | 'json' = 'txt',
     language: 'en' | 'pt' = 'en'
   ) => {
     trackEvent('prompt_generated', {
@@ -90,12 +90,12 @@ export function useAnalytics() {
 
   const trackPromptCopied = (
     source: 'copy_button' | 'keyboard_shortcut' = 'copy_button',
-    format: 'txt' | 'md' | 'yaml' = 'txt'
+    format: 'txt' | 'md' | 'json' = 'txt'
   ) => {
     trackEvent('prompt_copied', { source, format });
   };
 
-  const trackPromptDownloaded = (format: 'txt' | 'md' | 'yaml' = 'txt') => {
+  const trackPromptDownloaded = (format: 'txt' | 'md' | 'json' = 'txt') => {
     trackEvent('prompt_downloaded', { format });
   };
 
@@ -117,8 +117,8 @@ export function useAnalytics() {
   };
 
   const trackOutputFormatChanged = (
-    from: 'txt' | 'md' | 'yaml',
-    to: 'txt' | 'md' | 'yaml'
+    from: 'txt' | 'md' | 'json',
+    to: 'txt' | 'md' | 'json'
   ) => {
     trackEvent('output_format_changed', { from, to });
   };

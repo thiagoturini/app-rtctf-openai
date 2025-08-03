@@ -99,9 +99,7 @@ function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
         planning: "formato de planejamento: objetivos, etapas, cronograma e métricas",
         default: "texto bem estruturado com introdução, desenvolvimento e conclusão"
       },
-      template: `**PROMPT OTIMIZADO - METODOLOGIA RTCTF:**
-
-**R (Role/Papel):** Você é um {role}.
+      template: `**R (Role/Papel):** Você é um {role}.
 
 **T (Task/Tarefa):** {task}
 
@@ -141,9 +139,7 @@ function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
         planning: "planning format: objectives, stages, timeline and metrics",
         default: "well-structured text with introduction, development and conclusion"
       },
-      template: `**OPTIMIZED PROMPT - RTCTF METHODOLOGY:**
-
-**R (Role):** You are an {role}.
+      template: `**R (Role):** You are an {role}.
 
 **T (Task):** {task}
 
@@ -277,8 +273,6 @@ USER INPUT: """${text}"""
 
 Transform into a structured RTCTF prompt following EXACTLY this structure:
 
-**OPTIMIZED RTCTF PROMPT:**
-
 **R (Role):** You are a [specific expert/professional role]
 
 **T (Task):** [Clear, specific action to perform]
@@ -289,7 +283,6 @@ Transform into a structured RTCTF prompt following EXACTLY this structure:
 
 **F (Format):** [Specific response structure]
 
-**CONSOLIDATED PROMPT:**
 [A single, clear prompt that incorporates all RTCTF elements naturally]
 
 Be specific and actionable. The final prompt should deliver exceptional results when used with any LLM.
@@ -328,7 +321,6 @@ Transforme em um prompt RTCTF estruturado seguindo EXATAMENTE esta estrutura:
 
 **F (Format/Formato):** [Estrutura específica da resposta]
 
-**PROMPT CONSOLIDADO:**
 [Um prompt único e claro que incorpora todos os elementos RTCTF naturalmente]
 
 Seja específico e acionável. O prompt final deve entregar resultados excepcionais quando usado com qualquer LLM.
