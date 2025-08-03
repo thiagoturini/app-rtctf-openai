@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAnalytics } from './hooks/useAnalytics';
+import { useTranslations } from './hooks/useTranslations';
+import { useOutputFormat } from './hooks/useOutputFormat';
 
 interface HistoryItem {
   id: string;
@@ -18,8 +20,10 @@ export default function Home() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
-  // Initialize analytics
+  // Initialize hooks
   const analytics = useAnalytics();
+  const { language, changeLanguage, t } = useTranslations();
+  const { format, changeFormat, formatContent, formatConfig } = useOutputFormat();
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -46,7 +50,7 @@ export default function Home() {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
           // Use analytics directly without dependency issue
-          analytics.trackPromptCopied('keyboard_shortcut');
+          analytics.trackPromptCopied('keyboard_shortcut', format);
         }
       }
     };
@@ -84,16 +88,19 @@ export default function Home() {
       const res = await fetch('/api/rtctf', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, useAI: true }),
+        body: JSON.stringify({ text, useAI: true, language }),
       });
       const data = await res.json();
       const prompt = data.prompt || data.error;
-      setResult(prompt);
+      
+      // Format the output based on selected format
+      const formattedPrompt = formatContent(prompt);
+      setResult(formattedPrompt);
       
       if (prompt && !data.error) {
-        saveToHistory(text, prompt);
-        // Track successful prompt generation
-        analytics.trackPromptGenerated(data.source || 'Local', text, prompt);
+        saveToHistory(text, formattedPrompt);
+        // Track successful prompt generation with new parameters
+        analytics.trackPromptGenerated(data.source || 'Local', text, formattedPrompt, format, language);
         
         // Track AI fallback if it occurred
         if (data.source === 'Local (AI unavailable)') {
@@ -104,7 +111,7 @@ export default function Home() {
         analytics.trackError('api_error', data.error);
       }
     } catch {
-      const errorMessage = 'Erro ao conectar com a API';
+      const errorMessage = language === 'pt' ? 'Erro ao conectar com a API' : 'Error connecting to API';
       setResult(errorMessage);
       analytics.trackError('network_error', errorMessage);
     }
@@ -116,7 +123,7 @@ export default function Home() {
       await navigator.clipboard.writeText(result);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      analytics.trackPromptCopied('copy_button');
+      analytics.trackPromptCopied('copy_button', format);
     }
   };
 
@@ -141,17 +148,17 @@ export default function Home() {
 
   const downloadPrompt = () => {
     if (result) {
-      const blob = new Blob([result], { type: 'text/plain' });
+      const blob = new Blob([result], { type: formatConfig.mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `rtctf-prompt-${Date.now()}.txt`;
+      a.download = `rtctf-prompt-${Date.now()}.${formatConfig.extension}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      // Track download action
-      analytics.trackPromptDownloaded();
+      // Track download action with format
+      analytics.trackPromptDownloaded(format);
     }
   };
 
@@ -162,10 +169,42 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-medium text-slate-900">RTCTF Transformer</h1>
-              <p className="text-sm text-slate-600 mt-1">Transform ideas into structured prompts</p>
+              <h1 className="text-lg font-medium text-slate-900">{t.title}</h1>
+              <p className="text-sm text-slate-600 mt-1">{t.subtitle}</p>
             </div>
             <div className="flex items-center gap-4">
+              {/* Language Switcher */}
+              <div className="flex items-center gap-1 border border-slate-200 rounded-md p-1">
+                <button
+                  onClick={() => {
+                    const oldLang = language;
+                    changeLanguage('en');
+                    analytics.trackLanguageChanged(oldLang, 'en');
+                  }}
+                  className={`px-2 py-1 text-xs rounded transition-all duration-200 ${
+                    language === 'en' 
+                      ? 'bg-slate-800 text-white' 
+                      : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+                  }`}
+                >
+                  EN
+                </button>
+                <button
+                  onClick={() => {
+                    const oldLang = language;
+                    changeLanguage('pt');
+                    analytics.trackLanguageChanged(oldLang, 'pt');
+                  }}
+                  className={`px-2 py-1 text-xs rounded transition-all duration-200 ${
+                    language === 'pt' 
+                      ? 'bg-slate-800 text-white' 
+                      : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+                  }`}
+                >
+                  PT
+                </button>
+              </div>
+              
               <button
                 onClick={() => {
                   setShowHistory(!showHistory);
@@ -176,10 +215,10 @@ export default function Home() {
                 }}
                 className="text-xs text-slate-600 hover:text-slate-800 px-3 py-1.5 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
               >
-                History ({history.length})
+                {t.historyButton} ({history.length})
               </button>
               <div className="text-xs text-slate-400 font-mono">
-                v2.0
+                {t.version}
               </div>
             </div>
           </div>

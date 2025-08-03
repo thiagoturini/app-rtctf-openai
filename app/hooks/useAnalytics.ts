@@ -6,15 +6,18 @@ export interface AnalyticsEvent {
     source: 'AI' | 'Local' | 'AI Enhanced' | 'Local (AI unavailable)';
     input_length: number;
     output_length: number;
+    output_format: 'txt' | 'md' | 'yaml';
+    language: 'en' | 'pt';
   };
   
   // Eventos de interação
   'prompt_copied': {
     source: 'copy_button' | 'keyboard_shortcut';
+    format: 'txt' | 'md' | 'yaml';
   };
   
   'prompt_downloaded': {
-    format: 'txt';
+    format: 'txt' | 'md' | 'yaml';
   };
   
   'history_viewed': {
@@ -27,6 +30,22 @@ export interface AnalyticsEvent {
   
   'example_used': {
     example_type: string;
+    language: 'en' | 'pt';
+  };
+  
+  // Novos eventos de customização
+  'language_changed': {
+    from: 'en' | 'pt';
+    to: 'en' | 'pt';
+  };
+  
+  'output_format_changed': {
+    from: 'txt' | 'md' | 'yaml';
+    to: 'txt' | 'md' | 'yaml';
+  };
+  
+  'methodology_viewed': {
+    language: 'en' | 'pt';
   };
   
   // Eventos de qualidade
@@ -56,21 +75,28 @@ export function useAnalytics() {
   const trackPromptGenerated = (
     source: AnalyticsEvent['prompt_generated']['source'],
     inputText: string,
-    outputText: string
+    outputText: string,
+    outputFormat: 'txt' | 'md' | 'yaml' = 'txt',
+    language: 'en' | 'pt' = 'en'
   ) => {
     trackEvent('prompt_generated', {
       source,
       input_length: inputText.length,
       output_length: outputText.length,
+      output_format: outputFormat,
+      language,
     });
   };
 
-  const trackPromptCopied = (source: 'copy_button' | 'keyboard_shortcut' = 'copy_button') => {
-    trackEvent('prompt_copied', { source });
+  const trackPromptCopied = (
+    source: 'copy_button' | 'keyboard_shortcut' = 'copy_button',
+    format: 'txt' | 'md' | 'yaml' = 'txt'
+  ) => {
+    trackEvent('prompt_copied', { source, format });
   };
 
-  const trackPromptDownloaded = () => {
-    trackEvent('prompt_downloaded', { format: 'txt' });
+  const trackPromptDownloaded = (format: 'txt' | 'md' | 'yaml' = 'txt') => {
+    trackEvent('prompt_downloaded', { format });
   };
 
   const trackHistoryViewed = (itemsCount: number) => {
@@ -82,8 +108,23 @@ export function useAnalytics() {
     trackEvent('history_item_reused', { age_minutes: ageMinutes });
   };
 
-  const trackExampleUsed = (exampleType: string) => {
-    trackEvent('example_used', { example_type: exampleType });
+  const trackExampleUsed = (exampleType: string, language: 'en' | 'pt' = 'en') => {
+    trackEvent('example_used', { example_type: exampleType, language });
+  };
+
+  const trackLanguageChanged = (from: 'en' | 'pt', to: 'en' | 'pt') => {
+    trackEvent('language_changed', { from, to });
+  };
+
+  const trackOutputFormatChanged = (
+    from: 'txt' | 'md' | 'yaml',
+    to: 'txt' | 'md' | 'yaml'
+  ) => {
+    trackEvent('output_format_changed', { from, to });
+  };
+
+  const trackMethodologyViewed = (language: 'en' | 'pt' = 'en') => {
+    trackEvent('methodology_viewed', { language });
   };
 
   const trackAIFallback = (reason: AnalyticsEvent['ai_fallback_used']['reason']) => {
@@ -105,6 +146,9 @@ export function useAnalytics() {
     trackHistoryViewed,
     trackHistoryItemReused,
     trackExampleUsed,
+    trackLanguageChanged,
+    trackOutputFormatChanged,
+    trackMethodologyViewed,
     trackAIFallback,
     trackError,
   };
