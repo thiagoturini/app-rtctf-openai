@@ -98,20 +98,7 @@ function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
         explanation: "formato educativo: introdução, conceitos principais, exemplos e resumo",
         planning: "formato de planejamento: objetivos, etapas, cronograma e métricas",
         default: "texto bem estruturado com introdução, desenvolvimento e conclusão"
-      },
-      template: `**R (Role/Papel):** Você é um {role}.
-
-**T (Task/Tarefa):** {task}
-
-**C (Context/Contexto):** Considere que {context}. {specificContext}
-
-**T (Tone/Tom):** Use um tom {tone}, sendo preciso e focado nos aspectos mais importantes.
-
-**F (Format/Formato):** Apresente a resposta em {format}.
-
----
-**PROMPT CONSOLIDADO:**
-{consolidatedPrompt}`
+      }
     },
     en: {
       roles: {
@@ -138,20 +125,7 @@ function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
         explanation: "educational format: introduction, main concepts, examples and summary",
         planning: "planning format: objectives, stages, timeline and metrics",
         default: "well-structured text with introduction, development and conclusion"
-      },
-      template: `**R (Role):** You are an {role}.
-
-**T (Task):** {task}
-
-**C (Context):** Consider that {context}. {specificContext}
-
-**T (Tone):** Use a {tone} tone, being precise and focused on the most important aspects.
-
-**F (Format):** Present the response in {format}.
-
----
-**CONSOLIDATED PROMPT:**
-{consolidatedPrompt}`
+      }
     }
   };
   
@@ -190,19 +164,44 @@ function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
   else if (isExplanation) format = t.formats.explanation;
   else if (isPlanning) format = t.formats.planning;
   
-  // Criar prompt consolidado melhorado
+  // Criar prompt consolidado (NATURAL, SEM HEADERS)
   const consolidatedPrompt = language === 'pt' 
     ? `Você é um ${role}. ${text} Considere que ${context}. ${specificContext} Use um tom ${tone}, sendo preciso e focado nos aspectos mais importantes. Apresente a resposta em ${format}.`
     : `You are an ${role}. ${text} Consider that ${context}. ${specificContext} Use a ${tone} tone, being precise and focused on the most important aspects. Present the response in ${format}.`;
   
-  return t.template
-    .replace('{role}', role)
-    .replace('{task}', text)
-    .replace('{context}', context)
-    .replace('{specificContext}', specificContext)
-    .replace('{tone}', tone)
-    .replace('{format}', format)
-    .replace('{consolidatedPrompt}', consolidatedPrompt);
+  // Criar prompt otimizado estruturado (COM HEADERS R-T-C-T-F)
+  const optimizedPrompt = language === 'pt' 
+    ? `**R (Role/Papel):** Você é um ${role}.
+
+**T (Task/Tarefa):** ${text}
+
+**C (Context/Contexto):** Considere que ${context}. ${specificContext}
+
+**T (Tone/Tom):** Use um tom ${tone}, sendo preciso e focado nos aspectos mais importantes.
+
+**F (Format/Formato):** Apresente a resposta em ${format}.`
+    : `**R (Role):** You are an ${role}.
+
+**T (Task):** ${text}
+
+**C (Context):** Consider that ${context}. ${specificContext}
+
+**T (Tone):** Use a ${tone} tone, being precise and focused on the most important aspects.
+
+**F (Format):** Present the response in ${format}.`;
+
+  // Retornar ambos os prompts de forma claramente separada
+  return language === 'pt' 
+    ? `${optimizedPrompt}
+
+---
+PROMPT CONSOLIDADO:
+${consolidatedPrompt}`
+    : `${optimizedPrompt}
+
+---
+CONSOLIDATED PROMPT:
+${consolidatedPrompt}`;
 }
 
 export async function POST(request: Request) {
@@ -285,6 +284,8 @@ Transform into a structured RTCTF prompt following EXACTLY this structure:
 
 **F (Format):** [Specific response structure]
 
+---
+CONSOLIDATED PROMPT:
 [A single, clear prompt that incorporates all RTCTF elements naturally]
 
 Be specific and actionable. The final prompt should deliver exceptional results when used with any LLM.
@@ -311,8 +312,6 @@ ENTRADA DO USUÁRIO: """${text}"""
 
 Transforme em um prompt RTCTF estruturado seguindo EXATAMENTE esta estrutura:
 
-**PROMPT OTIMIZADO RTCTF:**
-
 **R (Role/Papel):** Você é um [papel específico de especialista/profissional]
 
 **T (Task/Tarefa):** [Ação clara e específica a ser executada]
@@ -323,6 +322,8 @@ Transforme em um prompt RTCTF estruturado seguindo EXATAMENTE esta estrutura:
 
 **F (Format/Formato):** [Estrutura específica da resposta]
 
+---
+PROMPT CONSOLIDADO:
 [Um prompt único e claro que incorpora todos os elementos RTCTF naturalmente]
 
 Seja específico e acionável. O prompt final deve entregar resultados excepcionais quando usado com qualquer LLM.
