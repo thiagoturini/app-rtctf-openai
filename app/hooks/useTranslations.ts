@@ -54,6 +54,15 @@ interface Translations {
   // Dynamic placeholder examples
   placeholderExamples: string[];
   
+  // AI Models compatibility section
+  aiModelsTitle: string;
+  aiModelsDesc: string;
+  aiModels: string[];
+  
+  // Tips section
+  tipsTitle: string;
+  tips: string[];
+  
   // Footer
   version: string;
   
@@ -67,7 +76,7 @@ interface Translations {
 const translations: Record<Language, Translations> = {
   en: {
     title: "RTCTF Transformer",
-    subtitle: "Transform any question into a structured prompt",
+    subtitle: "Transform any question into a structured prompt for your AI",
     valueProposition: "Turn simple questions into optimized prompts that follow the RTCTF methodology (Role-Task-Context-Tone-Format) to get better responses from AI models.",
     
     inputLabel: "Your Question or Idea",
@@ -123,6 +132,27 @@ const translations: Record<Language, Translations> = {
       "Summarize the main benefits of remote work"
     ],
     
+    // AI Models compatibility
+    aiModelsTitle: "🤖 Compatible with Leading AI Models",
+    aiModelsDesc: "Optimized prompts work perfectly with:",
+    aiModels: [
+      "ChatGPT (GPT-4, GPT-4o)",
+      "Claude (3.5 Sonnet, 3 Opus)",
+      "Gemini (Pro, Ultra)",
+      "Perplexity AI",
+      "Copilot (GPT-4 Turbo)",
+      "LLaMA 3.1 & 3.2"
+    ],
+    
+    // Tips section  
+    tipsTitle: "💡 Tips for amazing prompts",
+    tips: [
+      "Be specific about what you want",
+      "Mention your target audience or context", 
+      "Indicate your desired response format",
+      "Use examples to clarify your idea"
+    ],
+    
     version: "v2.1",
     
     analytics: {
@@ -133,7 +163,7 @@ const translations: Record<Language, Translations> = {
   
   pt: {
     title: "RTCTF Transformer",
-    subtitle: "Transforme qualquer pergunta em um prompt estruturado",
+    subtitle: "Transforme qualquer pergunta em um prompt estruturado para sua IA",
     valueProposition: "Transforme perguntas simples em prompts otimizados que seguem a metodologia RTCTF (Papel-Tarefa-Contexto-Tom-Formato) para obter melhores respostas de modelos de IA.",
     
     inputLabel: "Sua Pergunta ou Ideia",
@@ -187,6 +217,27 @@ const translations: Record<Language, Translations> = {
       "Escrever um post no LinkedIn sobre minha mudança de carreira", 
       "Planejar uma estratégia de marketing para minha loja online",
       "Resumir os principais benefícios do trabalho remoto"
+    ],
+    
+    // Compatibilidade com modelos de IA
+    aiModelsTitle: "🤖 Compatível com os Principais Modelos de IA",
+    aiModelsDesc: "Prompts otimizados funcionam perfeitamente com:",
+    aiModels: [
+      "ChatGPT (GPT-4, GPT-4o)",
+      "Claude (3.5 Sonnet, 3 Opus)",
+      "Gemini (Pro, Ultra)",
+      "Perplexity AI",
+      "Copilot (GPT-4 Turbo)",
+      "LLaMA 3.1 & 3.2"
+    ],
+    
+    // Seção de dicas
+    tipsTitle: "💡 Dicas para prompts incríveis",
+    tips: [
+      "Seja específico sobre o que você quer",
+      "Mencione seu público-alvo ou contexto",
+      "Indique o formato de resposta desejado", 
+      "Use exemplos para clarificar sua ideia"
     ],
     
     version: "v2.1",

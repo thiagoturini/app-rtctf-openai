@@ -27,7 +27,7 @@ export default function Home() {
   // Initialize hooks
   const analytics = useAnalytics();
   const { language, changeLanguage, t } = useTranslations();
-  const { format, formatContent, formatConfig } = useOutputFormat();
+  const { format, changeFormat, formatContent, formatConfig } = useOutputFormat();
   const { displayText: typingPlaceholder } = useTypingAnimation({
     texts: t.placeholderExamples,
     speed: 80,
@@ -322,32 +322,27 @@ export default function Home() {
               </form>
             </div>
 
-            {/* Creative Tips Section */}
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4">
+            {/* AI Models Compatibility Section */}
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-lg">💡</span>
-                <h3 className="text-sm font-medium text-purple-900">
-                  {language === 'pt' ? 'Dicas para prompts incríveis' : 'Tips for amazing prompts'}
+                <span className="text-lg">🤖</span>
+                <h3 className="text-sm font-medium text-blue-900">
+                  {t.aiModelsTitle}
                 </h3>
               </div>
               
-              <div className="space-y-3 text-xs text-purple-700">
-                <div className="flex items-start gap-2">
-                  <span className="text-purple-400 mt-0.5">•</span>
-                  <p>{language === 'pt' ? 'Seja específico sobre o que você quer' : 'Be specific about what you want'}</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-purple-400 mt-0.5">•</span>
-                  <p>{language === 'pt' ? 'Mencione seu público-alvo ou contexto' : 'Mention your target audience or context'}</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-purple-400 mt-0.5">•</span>
-                  <p>{language === 'pt' ? 'Indique o formato de resposta desejado' : 'Indicate your desired response format'}</p>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-purple-400 mt-0.5">•</span>
-                  <p>{language === 'pt' ? 'Use exemplos para clarificar sua ideia' : 'Use examples to clarify your idea'}</p>
-                </div>
+              <p className="text-xs text-blue-700 mb-3">{t.aiModelsDesc}</p>
+              
+              <div className="grid grid-cols-1 gap-1">
+                {t.aiModels.map((model, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 text-xs text-blue-700 bg-blue-100 rounded px-2 py-1"
+                  >
+                    <span className="text-blue-500">✓</span>
+                    <span className="font-medium">{model}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -373,9 +368,30 @@ export default function Home() {
             {/* Optimized Prompt Card */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-slate-700">
-                  {t.optimizedPromptLabel}
-                </label>
+                <div className="flex items-center gap-4">
+                  <label className="block text-sm font-medium text-slate-700">
+                    {t.optimizedPromptLabel}
+                  </label>
+                  
+                  {/* Format Selector for Optimized */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">{t.formatLabel}:</span>
+                    <select
+                      value={format}
+                      onChange={(e) => {
+                        const oldFormat = format;
+                        const newFormat = e.target.value as 'txt' | 'md' | 'yaml';
+                        changeFormat(newFormat);
+                        analytics.trackOutputFormatChanged(oldFormat, newFormat);
+                      }}
+                      className="text-xs border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                    >
+                      <option value="txt">Text</option>
+                      <option value="md">Markdown</option>
+                      <option value="yaml">YAML</option>
+                    </select>
+                  </div>
+                </div>
                 
                 {optimizedPrompt && (
                   <div className="flex gap-2">
@@ -431,9 +447,30 @@ export default function Home() {
             {/* Consolidated Prompt Card */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-slate-700">
-                  {t.consolidatedPromptLabel}
-                </label>
+                <div className="flex items-center gap-4">
+                  <label className="block text-sm font-medium text-slate-700">
+                    {t.consolidatedPromptLabel}
+                  </label>
+                  
+                  {/* Format Selector for Consolidated */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-500">{t.formatLabel}:</span>
+                    <select
+                      value={format}
+                      onChange={(e) => {
+                        const oldFormat = format;
+                        const newFormat = e.target.value as 'txt' | 'md' | 'yaml';
+                        changeFormat(newFormat);
+                        analytics.trackOutputFormatChanged(oldFormat, newFormat);
+                      }}
+                      className="text-xs border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                    >
+                      <option value="txt">Text</option>
+                      <option value="md">Markdown</option>
+                      <option value="yaml">YAML</option>
+                    </select>
+                  </div>
+                </div>
                 
                 {consolidatedPrompt && (
                   <div className="flex gap-2">
@@ -540,6 +577,91 @@ export default function Home() {
             )}
           </div>
         )}
+
+        {/* Footer with RTCTF Methodology Explanation */}
+        <div className="mt-16 border-t border-slate-200 pt-12">
+          <div className="grid md:grid-cols-2 gap-8">
+            
+            {/* RTCTF Methodology */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-sm font-medium text-blue-900 mb-3">{t.methodologyTitle}</h3>
+              <p className="text-xs text-blue-700 leading-relaxed mb-4">{t.methodologyDescription}</p>
+              
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">R</div>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.role}</span>
+                    <p className="text-xs text-blue-600">{t.roleDesc}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">T</div>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.task}</span>
+                    <p className="text-xs text-blue-600">{t.taskDesc}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">C</div>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.context}</span>
+                    <p className="text-xs text-blue-600">{t.contextDesc}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">T</div>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.tone}</span>
+                    <p className="text-xs text-blue-600">{t.toneDesc}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">F</div>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.format}</span>
+                    <p className="text-xs text-blue-600">{t.formatDesc}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tips Section */}
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-lg">💡</span>
+                <h3 className="text-sm font-medium text-purple-900">
+                  {t.tipsTitle}
+                </h3>
+              </div>
+              
+              <div className="space-y-3">
+                {t.tips.map((tip, idx) => (
+                  <div key={idx} className="flex items-start gap-2">
+                    <span className="text-purple-400 mt-0.5">•</span>
+                    <p className="text-xs text-purple-700">{tip}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick Examples */}
+              <div className="mt-4 pt-4 border-t border-purple-200">
+                <h4 className="text-xs font-medium text-purple-800 mb-2">{t.examplesTitle}</h4>
+                <div className="space-y-1">
+                  {t.examples.map((example, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setText(example)}
+                      className="block w-full text-left text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-100 p-2 rounded transition-colors"
+                    >
+                      &ldquo;{example}&rdquo;
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
