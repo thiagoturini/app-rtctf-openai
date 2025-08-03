@@ -40,20 +40,19 @@ function transformToRTCTF(text: string): string {
   }
   
   // Gerar critérios específicos
-  let specificCriteria = [
+  const baseCriteria = [
     "Seja preciso e objetivo na resposta",
     "Use linguagem clara e profissional",
     "Baseie-se em informações confiáveis e atualizadas",
     "Mantenha foco no objetivo principal"
   ];
   
-  if (isBusinessRelated) {
-    specificCriteria.push("Considere viabilidade comercial e ROI", "Use dados e métricas quando possível");
-  } else if (isTechRelated) {
-    specificCriteria.push("Considere escalabilidade e manutenibilidade", "Inclua melhores práticas e padrões");
-  } else if (isEducationRelated) {
-    specificCriteria.push("Use exemplos práticos e analogias", "Estruture de forma progressiva");
-  }
+  const specificCriteria = [
+    ...baseCriteria,
+    ...(isBusinessRelated ? ["Considere viabilidade comercial e ROI", "Use dados e métricas quando possível"] : []),
+    ...(isTechRelated ? ["Considere escalabilidade e manutenibilidade", "Inclua melhores práticas e padrões"] : []),
+    ...(isEducationRelated ? ["Use exemplos práticos e analogias", "Estruture de forma progressiva"] : [])
+  ];
   
   return `
 **PROMPT OTIMIZADO USANDO METODOLOGIA RTCTF:**
