@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAnalytics } from './hooks/useAnalytics';
 import { useTranslations } from './hooks/useTranslations';
 import { useOutputFormat } from './hooks/useOutputFormat';
-import { useDynamicPlaceholder } from './hooks/useDynamicPlaceholder';
+import { useTypingAnimation } from './hooks/useTypingAnimation';
 
 interface HistoryItem {
   id: string;
@@ -25,7 +25,12 @@ export default function Home() {
   const analytics = useAnalytics();
   const { language, changeLanguage, t } = useTranslations();
   const { format, changeFormat, formatContent, formatConfig } = useOutputFormat();
-  const dynamicPlaceholder = useDynamicPlaceholder();
+  const { displayText: typingPlaceholder } = useTypingAnimation({
+    texts: t.placeholderExamples,
+    speed: 80,
+    pause: 3000,
+    startDelay: 2000
+  });
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -228,6 +233,13 @@ export default function Home() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* Value Proposition */}
+        <div className="mb-8 text-center">
+          <p className="text-slate-700 max-w-3xl mx-auto leading-relaxed">
+            {t.valueProposition}
+          </p>
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-8">
           
           {/* Input Section */}
@@ -242,7 +254,7 @@ export default function Home() {
                   onChange={(e) => setText(e.target.value)}
                   rows={8}
                   className="w-full p-4 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-transparent bg-white/70 font-mono placeholder-slate-400 resize-none"
-                  placeholder={dynamicPlaceholder || t.inputPlaceholder}
+                  placeholder={typingPlaceholder || t.inputPlaceholder}
                   required
                 />
                 
@@ -273,22 +285,6 @@ export default function Home() {
                   )}
                 </div>
               </form>
-            </div>
-
-            {/* Tech Credibility */}
-            <div className="mt-6">
-              <p className="text-xs text-slate-700 font-medium mb-3">{t.techTitle}</p>
-              <div className="grid grid-cols-2 gap-2">
-                {t.techSpecs.map((spec, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 rounded px-2 py-1"
-                  >
-                    <span className="text-green-500">✓</span>
-                    <span>{spec}</span>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
 

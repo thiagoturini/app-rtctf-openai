@@ -6,6 +6,7 @@ interface Translations {
   // Header
   title: string;
   subtitle: string;
+  valueProposition: string;
   
   // Form
   inputLabel: string;
@@ -48,10 +49,6 @@ interface Translations {
   format: string;
   formatDesc: string;
   
-  // Tech credibility section
-  techTitle: string;
-  techSpecs: string[];
-  
   // Dynamic placeholder examples
   placeholderExamples: string[];
   
@@ -68,9 +65,10 @@ interface Translations {
 const translations: Record<Language, Translations> = {
   en: {
     title: "RTCTF Transformer",
-    subtitle: "Boost your GenAI results with structured prompts",
+    subtitle: "Transform any question into a structured prompt",
+    valueProposition: "Turn simple questions into optimized prompts that follow the RTCTF methodology (Role-Task-Context-Tone-Format) to get better responses from AI models.",
     
-    inputLabel: "Your Idea",
+    inputLabel: "Your Question or Idea",
     inputPlaceholder: "Describe what you want to achieve with AI...",
     transformButton: "Transform",
     processing: "Processing...",
@@ -111,17 +109,6 @@ const translations: Record<Language, Translations> = {
     format: "Format",
     formatDesc: "Response structure: list, table, paragraph, code",
     
-    // Tech credibility
-    techTitle: "🚀 Powered by Advanced AI Technology",
-    techSpecs: [
-      "OpenAI GPT-4 Integration",
-      "Real-time Prompt Optimization",
-      "Multi-language Support (EN/PT)",
-      "Export: TXT, Markdown, YAML",
-      "Rate-limited Secure API",
-      "Next.js 15 + TypeScript"
-    ],
-    
     // Dynamic examples for input placeholder
     placeholderExamples: [
       "Create a marketing strategy for my startup...",
@@ -142,9 +129,10 @@ const translations: Record<Language, Translations> = {
   
   pt: {
     title: "RTCTF Transformer",
-    subtitle: "Melhore seus resultados com IA usando prompts estruturados",
+    subtitle: "Transforme qualquer pergunta em um prompt estruturado",
+    valueProposition: "Transforme perguntas simples em prompts otimizados que seguem a metodologia RTCTF (Papel-Tarefa-Contexto-Tom-Formato) para obter melhores respostas de modelos de IA.",
     
-    inputLabel: "Sua Ideia",
+    inputLabel: "Sua Pergunta ou Ideia",
     inputPlaceholder: "Descreva o que você quer alcançar com IA...",
     transformButton: "Transformar",
     processing: "Processando...",
@@ -184,17 +172,6 @@ const translations: Record<Language, Translations> = {
     toneDesc: "Estilo de escrita: formal, casual, técnico, educativo",
     format: "Format (Formato)",
     formatDesc: "Estrutura da resposta: lista, tabela, parágrafo, código",
-    
-    // Credibilidade tecnológica
-    techTitle: "🚀 Tecnologia de IA Avançada",
-    techSpecs: [
-      "Integração OpenAI GPT-4",
-      "Otimização de Prompts em Tempo Real",
-      "Suporte Multi-idioma (EN/PT)",
-      "Export: TXT, Markdown, YAML",
-      "API Segura com Rate Limiting",
-      "Next.js 15 + TypeScript"
-    ],
     
     // Exemplos dinâmicos para placeholder
     placeholderExamples: [
