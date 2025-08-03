@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 App RTCTF - Transformador de Prompts
 
-## Getting Started
+Uma aplicação web moderna que transforma textos simples em prompts otimizados usando a metodologia **RTCTF**.
 
-First, run the development server:
+## 🎯 O que é RTCTF?
+
+**RTCTF** é uma metodologia para criar prompts estruturados e eficazes:
+
+- **R** - Resultado desejado
+- **T** - Tarefa específica  
+- **C** - Contexto relevante
+- **C** - Critérios e restrições
+- **F** - Formato de resposta
+
+## ✨ Funcionalidades
+
+- 🆓 **Versão gratuita** - Transformação local sem custos
+- 🤖 **Versão OpenAI** - Usando inteligência artificial (opcional)
+- 📱 **Design responsivo** - Funciona em qualquer dispositivo
+- ⚡ **Interface moderna** - Built with Next.js e Tailwind CSS
+- 🔒 **Seguro** - Variáveis de ambiente protegidas
+
+## 🚀 Como usar
+
+1. Digite seu texto na caixa de entrada
+2. Escolha entre versão gratuita ou OpenAI
+3. Clique em "Transformar" 
+4. Copie o prompt otimizado gerado!
+
+## 🛠️ Tecnologias
+
+- **Next.js 15** - Framework React
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS** - Estilização
+- **OpenAI API** - Inteligência artificial (opcional)
+
+## 📦 Instalação
 
 ```bash
+# Clone o repositório
+git clone https://github.com/SEU_USERNAME/app-rtctf-openai.git
+
+# Entre na pasta
+cd app-rtctf-openai
+
+# Instale as dependências
+npm install
+
+# Configure as variáveis de ambiente (opcional)
+# Copie .env.local e adicione sua chave OpenAI
+OPENAI_API_KEY=sua_chave_aqui
+
+# Execute o projeto
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🌐 Deploy
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Este projeto pode ser facilmente deployado no:
+- **Vercel** (recomendado)
+- **Netlify** 
+- **Railway**
+- **Heroku**
 
-## Learn More
+## 📝 Licença
 
-To learn more about Next.js, take a look at the following resources:
+MIT License - veja o arquivo LICENSE para detalhes.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Feito com ❤️ para facilitar a criação de prompts eficazes!
