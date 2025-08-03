@@ -212,18 +212,6 @@ export default function Home() {
                 </button>
               </div>
               
-              <button
-                onClick={() => {
-                  setShowHistory(!showHistory);
-                  if (!showHistory) {
-                    // Track when user opens history
-                    analytics.trackHistoryViewed(history.length);
-                  }
-                }}
-                className="text-xs text-slate-600 hover:text-slate-800 px-3 py-1.5 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
-              >
-                {t.historyButton} ({history.length})
-              </button>
               <div className="text-xs text-slate-400 font-mono">
                 {t.version}
               </div>
@@ -243,7 +231,7 @@ export default function Home() {
         <div className="grid lg:grid-cols-3 gap-8">
           
           {/* Input Section */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 {t.inputLabel}
@@ -286,6 +274,65 @@ export default function Home() {
                 </div>
               </form>
             </div>
+
+            {/* Methodology Section */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-blue-900 mb-2">{t.methodologyTitle}</h3>
+              <p className="text-xs text-blue-700 leading-relaxed mb-3">{t.methodologyDescription}</p>
+              
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-mono text-blue-600 font-bold">R</span>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.role}</span>
+                    <p className="text-xs text-blue-600">{t.roleDesc}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-mono text-blue-600 font-bold">T</span>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.task}</span>
+                    <p className="text-xs text-blue-600">{t.taskDesc}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-mono text-blue-600 font-bold">C</span>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.context}</span>
+                    <p className="text-xs text-blue-600">{t.contextDesc}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-mono text-blue-600 font-bold">T</span>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.tone}</span>
+                    <p className="text-xs text-blue-600">{t.toneDesc}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-xs font-mono text-blue-600 font-bold">F</span>
+                  <div>
+                    <span className="text-xs font-medium text-blue-800">{t.format}</span>
+                    <p className="text-xs text-blue-600">{t.formatDesc}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* History Button */}
+            {history.length > 0 && (
+              <button
+                onClick={() => {
+                  setShowHistory(!showHistory);
+                  if (!showHistory) {
+                    analytics.trackHistoryViewed(history.length);
+                  }
+                }}
+                className="w-full text-xs text-slate-600 hover:text-slate-800 px-3 py-2 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
+              >
+                {t.historyButton} ({history.length})
+              </button>
+            )}
           </div>
 
           {/* Output Section */}

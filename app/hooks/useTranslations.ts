@@ -18,6 +18,8 @@ interface Translations {
   // Output
   outputLabel: string;
   outputPlaceholder: string;
+  optimizedPromptLabel: string;
+  consolidatedPromptLabel: string;
   copyButton: string;
   copied: string;
   downloadButton: string;
@@ -76,6 +78,8 @@ const translations: Record<Language, Translations> = {
     
     outputLabel: "Optimized Prompt",
     outputPlaceholder: "Your structured prompt will appear here",
+    optimizedPromptLabel: "Optimized Prompt",
+    consolidatedPromptLabel: "Consolidated Prompt",
     copyButton: "Copy",
     copied: "Copied!",
     downloadButton: "Download",
@@ -94,29 +98,29 @@ const translations: Record<Language, Translations> = {
       "Plan a team productivity workshop"
     ],
     
-    methodologyTitle: "About RTCTF Methodology",
-    methodologyDescription: "RTCTF methodology structures prompt engineering for clear communication with AI models. Follow: Role (who AI should be), Task (what to do), Context (background info), Tone (writing style), Format (response structure).",
+    methodologyTitle: "✅ What is the RTCTF methodology?",
+    methodologyDescription: "RTCTF is a framework for writing clear, objective and effective prompts for language models (like ChatGPT). It helps you guide AI with precision, providing the right context and instructions to get better, more useful responses aligned with your goal.",
     
     // RTCTF Components - Correct methodology
     role: "Role",
-    roleDesc: "Who the AI should be or what persona to adopt",
+    roleDesc: "Who the AI should represent (teacher, doctor, programmer)",
     task: "Task", 
-    taskDesc: "The specific action to be performed",
+    taskDesc: "Exactly what the AI should do (write, summarize, compare)",
     context: "Context",
-    contextDesc: "Background information to help AI understand",
+    contextDesc: "Background information to help AI understand the situation",
     tone: "Tone",
-    toneDesc: "Writing style: formal, casual, technical, educational",
+    toneDesc: "Writing style: professional, didactic, motivational, concise",
     format: "Format",
     formatDesc: "Response structure: list, table, paragraph, code",
     
     // Dynamic examples for input placeholder
     placeholderExamples: [
-      "Create a marketing strategy for my startup...",
-      "Explain quantum computing to beginners...",
-      "Analyze this sales data and provide insights...",
-      "Write a professional email to investors...",
-      "Plan a team building workshop agenda...",
-      "Generate creative ideas for app features..."
+      "Help me write an email to my boss asking for a raise",
+      "Create a study plan for learning Python in 3 months", 
+      "Explain machine learning to a 12-year-old",
+      "Write a LinkedIn post about my career change",
+      "Plan a marketing strategy for my online store",
+      "Summarize the main benefits of remote work"
     ],
     
     version: "v2.1",
@@ -140,6 +144,8 @@ const translations: Record<Language, Translations> = {
     
     outputLabel: "Prompt Otimizado",
     outputPlaceholder: "Seu prompt estruturado aparecerá aqui",
+    optimizedPromptLabel: "Prompt Otimizado", 
+    consolidatedPromptLabel: "Prompt Consolidado",
     copyButton: "Copiar",
     copied: "Copiado!",
     downloadButton: "Baixar",
@@ -158,29 +164,29 @@ const translations: Record<Language, Translations> = {
       "Planejar um workshop de produtividade em equipe"
     ],
     
-    methodologyTitle: "Sobre a Metodologia RTCTF",
-    methodologyDescription: "RTCTF estrutura prompt engineering para comunicação clara com IAs. Siga: Role (quem a IA deve ser), Task (o que fazer), Context (informações de fundo), Tone (estilo de escrita), Format (estrutura da resposta).",
+    methodologyTitle: "✅ O que é a metodologia RTCTF?",
+    methodologyDescription: "RTCTF é uma estrutura usada para escrever prompts claros, objetivos e eficazes para modelos de linguagem (como o ChatGPT). Ela ajuda você a guiar a IA com precisão, fornecendo o contexto e as instruções certas para obter respostas melhores, mais úteis e alinhadas com o seu objetivo.",
     
     // Componentes RTCTF - Metodologia correta
     role: "Role (Papel)",
-    roleDesc: "Quem a IA deve ser ou qual persona adotar",
+    roleDesc: "Quem a IA deve representar (professor, médico, programador)",
     task: "Task (Tarefa)",
-    taskDesc: "A ação específica a ser executada", 
+    taskDesc: "Exatamente o que a IA deve fazer (escrever, resumir, comparar)", 
     context: "Context (Contexto)",
-    contextDesc: "Informações de fundo para ajudar a IA",
+    contextDesc: "Informações de fundo que ajudam a IA a entender a situação",
     tone: "Tone (Tom)",
-    toneDesc: "Estilo de escrita: formal, casual, técnico, educativo",
+    toneDesc: "Estilo de escrita: profissional, didático, motivador, conciso",
     format: "Format (Formato)",
     formatDesc: "Estrutura da resposta: lista, tabela, parágrafo, código",
     
     // Exemplos dinâmicos para placeholder
     placeholderExamples: [
-      "Criar uma estratégia de marketing para minha startup...",
-      "Explicar computação quântica para iniciantes...",
-      "Analisar estes dados de vendas e dar insights...",
-      "Escrever um email profissional para investidores...",
-      "Planejar agenda de workshop de team building...",
-      "Gerar ideias criativas para funcionalidades de app..."
+      "Me ajude a escrever um email pro meu chefe pedindo aumento",
+      "Criar um plano de estudos para aprender Python em 3 meses",
+      "Explicar machine learning para uma criança de 12 anos",
+      "Escrever um post no LinkedIn sobre minha mudança de carreira", 
+      "Planejar uma estratégia de marketing para minha loja online",
+      "Resumir os principais benefícios do trabalho remoto"
     ],
     
     version: "v2.1",

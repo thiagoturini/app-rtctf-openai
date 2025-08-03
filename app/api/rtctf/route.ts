@@ -105,15 +105,15 @@ function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
 
 **T (Task/Tarefa):** {task}
 
-**C (Context/Contexto):** Considere que o público-alvo é {context}. {specificContext}
+**C (Context/Contexto):** Considere que {context}. {specificContext}
 
-**T (Tone/Tom):** Use um tom {tone}. Seja preciso, prático e mantenha foco nos aspectos mais importantes.
+**T (Tone/Tom):** Use um tom {tone}, sendo preciso e focado nos aspectos mais importantes.
 
-**F (Format/Formato):** {format}
+**F (Format/Formato):** Apresente a resposta em {format}.
 
 ---
 **PROMPT CONSOLIDADO:**
-"{consolidatedPrompt}"`
+{consolidatedPrompt}`
     },
     en: {
       roles: {
@@ -147,15 +147,15 @@ function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
 
 **T (Task):** {task}
 
-**C (Context):** Consider that the target audience is {context}. {specificContext}
+**C (Context):** Consider that {context}. {specificContext}
 
-**T (Tone):** Use a {tone} tone. Be precise, practical and maintain focus on the most important aspects.
+**T (Tone):** Use a {tone} tone, being precise and focused on the most important aspects.
 
-**F (Format):** {format}
+**F (Format):** Present the response in {format}.
 
 ---
 **CONSOLIDATED PROMPT:**
-"{consolidatedPrompt}"`
+{consolidatedPrompt}`
     }
   };
   
