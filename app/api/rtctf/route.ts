@@ -97,7 +97,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Texto é obrigatório.' }, { status: 400 });
     }
 
-    // Se useAI for true e tiver a chave, usa OpenAI
+    // Sempre tentar a versão local primeiro (mais rápida e sem custo)
+    const localResult = transformToRTCTF(text);
+
+    // Se useAI for true e tiver a chave, tentar OpenAI também
     if (useAI && process.env.OPENAI_API_KEY) {
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       
@@ -157,19 +160,25 @@ Seja específico, detalhado e prático. O prompt final deve ser algo que qualque
           temperature: 0.7,
         });
 
-        const transformed = completion.choices[0].message?.content;
-        return NextResponse.json({ prompt: transformed, source: 'AI' });
+        const aiResult = completion.choices[0].message?.content;
+        if (aiResult) {
+          return NextResponse.json({ 
+            prompt: aiResult, 
+            source: 'AI Enhanced',
+            fallback: localResult 
+          });
+        }
       } catch (aiError) {
         console.error('OpenAI error:', aiError);
-        // Se falhar com AI, usa a versão local
-        const transformed = transformToRTCTF(text);
-        return NextResponse.json({ prompt: transformed, source: 'Local (AI failed)' });
+        // Em caso de erro da AI, usa a versão local
       }
     }
 
-    // Usar transformação local
-    const transformed = transformToRTCTF(text);
-    return NextResponse.json({ prompt: transformed, source: 'Local' });
+    // Retorna a versão local (sempre funciona)
+    return NextResponse.json({ 
+      prompt: localResult, 
+      source: useAI ? 'Local (AI unavailable)' : 'Local' 
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: 'Erro ao gerar prompt.' }, { status: 500 });
