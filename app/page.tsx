@@ -16,21 +16,70 @@ interface HistoryItem {
 export default function Home() {
   const [text, setText] = useState('');
   const [result, setResult] = useState('');
+  const [optimizedPrompt, setOptimizedPrompt] = useState('');
+  const [consolidatedPrompt, setConsolidatedPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedOptimized, setCopiedOptimized] = useState(false);
+  const [copiedConsolidated, setCopiedConsolidated] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
   // Initialize hooks
   const analytics = useAnalytics();
   const { language, changeLanguage, t } = useTranslations();
-  const { format, changeFormat, formatContent, formatConfig } = useOutputFormat();
+  const { format, formatContent, formatConfig } = useOutputFormat();
   const { displayText: typingPlaceholder } = useTypingAnimation({
     texts: t.placeholderExamples,
     speed: 80,
     pause: 3000,
     startDelay: 2000
   });
+
+  // Parse the result into optimized and consolidated prompts
+  const parsePromptResult = (text: string) => {
+    const lines = text.split('\n');
+    let optimizedSection = '';
+    let consolidatedSection = '';
+    let currentSection = '';
+    
+    for (const line of lines) {
+      if (line.includes('PROMPT CONSOLIDADO') || line.includes('CONSOLIDATED PROMPT')) {
+        currentSection = 'consolidated';
+        continue;
+      }
+      
+      if (currentSection === 'consolidated') {
+        consolidatedSection += line + '\n';
+      } else {
+        optimizedSection += line + '\n';
+      }
+    }
+    
+    // Clean up the consolidated prompt (remove quotes and trim)
+    consolidatedSection = consolidatedSection.trim().replace(/^"/, '').replace(/"$/, '');
+    
+    return {
+      optimized: optimizedSection.trim(),
+      consolidated: consolidatedSection.trim()
+    };
+  };
+
+  // Download function for individual prompts
+  const downloadPrompt = (content: string, filename: string) => {
+    if (content) {
+      const formattedContent = formatContent(content);
+      const blob = new Blob([formattedContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.${formatConfig.extension}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      analytics.trackPromptDownloaded(format);
+    }
+  };
 
   // Load history from localStorage on mount
   useEffect(() => {
@@ -48,15 +97,14 @@ export default function Home() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Copy shortcut (Ctrl+C or Cmd+C) when result is available and not in textarea
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && result && 
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && (optimizedPrompt || consolidatedPrompt) && 
           !(e.target as HTMLElement)?.tagName?.toLowerCase().includes('textarea')) {
         e.preventDefault();
-        // Copy and track directly here
-        if (result) {
-          navigator.clipboard.writeText(result);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-          // Use analytics directly without dependency issue
+        // Copy optimized prompt by default
+        if (optimizedPrompt) {
+          navigator.clipboard.writeText(optimizedPrompt);
+          setCopiedOptimized(true);
+          setTimeout(() => setCopiedOptimized(false), 2000);
           analytics.trackPromptCopied('keyboard_shortcut', format);
         }
       }
@@ -64,9 +112,8 @@ export default function Home() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [result, analytics, format]); // Add missing dependencies
+  }, [optimizedPrompt, consolidatedPrompt, format, analytics]);
 
-  // Save history to localStorage
   const saveToHistory = (input: string, output: string) => {
     const newItem: HistoryItem = {
       id: Date.now().toString(),
@@ -91,6 +138,8 @@ export default function Home() {
     
     setLoading(true);
     setResult('');
+    setOptimizedPrompt('');
+    setConsolidatedPrompt('');
     try {
       const res = await fetch('/api/rtctf', {
         method: 'POST',
@@ -100,20 +149,23 @@ export default function Home() {
       const data = await res.json();
       const prompt = data.prompt || data.error;
       
-      // Format the output based on selected format
-      const formattedPrompt = formatContent(prompt);
-      setResult(formattedPrompt);
-      
       if (prompt && !data.error) {
-        saveToHistory(text, formattedPrompt);
+        // Parse the result into two sections
+        const parsed = parsePromptResult(prompt);
+        setOptimizedPrompt(parsed.optimized);
+        setConsolidatedPrompt(parsed.consolidated);
+        setResult(prompt); // Keep original for history
+        
+        saveToHistory(text, prompt);
         // Track successful prompt generation with new parameters
-        analytics.trackPromptGenerated(data.source || 'Local', text, formattedPrompt, format, language);
+        analytics.trackPromptGenerated(data.source || 'Local', text, prompt, format, language);
         
         // Track AI fallback if it occurred
         if (data.source === 'Local (AI unavailable)') {
           analytics.trackAIFallback('api_error');
         }
       } else if (data.error) {
+        setResult(prompt);
         // Track error
         analytics.trackError('api_error', data.error);
       }
@@ -125,11 +177,16 @@ export default function Home() {
     setLoading(false);
   };
 
-  const copyToClipboard = async () => {
-    if (result) {
-      await navigator.clipboard.writeText(result);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = async (text: string, type: 'optimized' | 'consolidated') => {
+    if (text) {
+      await navigator.clipboard.writeText(text);
+      if (type === 'optimized') {
+        setCopiedOptimized(true);
+        setTimeout(() => setCopiedOptimized(false), 2000);
+      } else {
+        setCopiedConsolidated(true);
+        setTimeout(() => setCopiedConsolidated(false), 2000);
+      }
       analytics.trackPromptCopied('copy_button', format);
     }
   };
@@ -137,11 +194,17 @@ export default function Home() {
   const clearAll = () => {
     setText('');
     setResult('');
-    setCopied(false);
+    setOptimizedPrompt('');
+    setConsolidatedPrompt('');
+    setCopiedOptimized(false);
+    setCopiedConsolidated(false);
   };
 
   const loadFromHistory = (item: HistoryItem) => {
     setText(item.input);
+    const parsed = parsePromptResult(item.output);
+    setOptimizedPrompt(parsed.optimized);
+    setConsolidatedPrompt(parsed.consolidated);
     setResult(item.output);
     setShowHistory(false);
     // Track history item reuse
@@ -151,22 +214,6 @@ export default function Home() {
   const clearHistory = () => {
     setHistory([]);
     localStorage.removeItem('rtctf-history');
-  };
-
-  const downloadPrompt = () => {
-    if (result) {
-      const blob = new Blob([result], { type: formatConfig.mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `rtctf-prompt-${Date.now()}.${formatConfig.extension}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      // Track download action with format
-      analytics.trackPromptDownloaded(format);
-    }
   };
 
   return (
@@ -275,46 +322,31 @@ export default function Home() {
               </form>
             </div>
 
-            {/* Methodology Section */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-blue-900 mb-2">{t.methodologyTitle}</h3>
-              <p className="text-xs text-blue-700 leading-relaxed mb-3">{t.methodologyDescription}</p>
+            {/* Creative Tips Section */}
+            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">💡</span>
+                <h3 className="text-sm font-medium text-purple-900">
+                  {language === 'pt' ? 'Dicas para prompts incríveis' : 'Tips for amazing prompts'}
+                </h3>
+              </div>
               
-              <div className="space-y-2">
+              <div className="space-y-3 text-xs text-purple-700">
                 <div className="flex items-start gap-2">
-                  <span className="text-xs font-mono text-blue-600 font-bold">R</span>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.role}</span>
-                    <p className="text-xs text-blue-600">{t.roleDesc}</p>
-                  </div>
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <p>{language === 'pt' ? 'Seja específico sobre o que você quer' : 'Be specific about what you want'}</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-xs font-mono text-blue-600 font-bold">T</span>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.task}</span>
-                    <p className="text-xs text-blue-600">{t.taskDesc}</p>
-                  </div>
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <p>{language === 'pt' ? 'Mencione seu público-alvo ou contexto' : 'Mention your target audience or context'}</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-xs font-mono text-blue-600 font-bold">C</span>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.context}</span>
-                    <p className="text-xs text-blue-600">{t.contextDesc}</p>
-                  </div>
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <p>{language === 'pt' ? 'Indique o formato de resposta desejado' : 'Indicate your desired response format'}</p>
                 </div>
                 <div className="flex items-start gap-2">
-                  <span className="text-xs font-mono text-blue-600 font-bold">T</span>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.tone}</span>
-                    <p className="text-xs text-blue-600">{t.toneDesc}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-xs font-mono text-blue-600 font-bold">F</span>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.format}</span>
-                    <p className="text-xs text-blue-600">{t.formatDesc}</p>
-                  </div>
+                  <span className="text-purple-400 mt-0.5">•</span>
+                  <p>{language === 'pt' ? 'Use exemplos para clarificar sua ideia' : 'Use examples to clarify your idea'}</p>
                 </div>
               </div>
             </div>
@@ -335,87 +367,123 @@ export default function Home() {
             )}
           </div>
 
-          {/* Output Section */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          {/* Output Section - Two Cards */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Optimized Prompt Card */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-slate-700">
-                  {t.outputLabel}
+                  {t.optimizedPromptLabel}
                 </label>
                 
-                {/* Format Selector */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-500">{t.formatLabel}:</span>
-                  <select
-                    value={format}
-                    onChange={(e) => {
-                      const oldFormat = format;
-                      const newFormat = e.target.value as 'txt' | 'md' | 'yaml';
-                      changeFormat(newFormat);
-                      analytics.trackOutputFormatChanged(oldFormat, newFormat);
-                      
-                      // Re-format existing result if available
-                      if (result) {
-                        setResult(formatContent(result));
-                      }
-                    }}
-                    className="text-xs border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-slate-400 focus:border-transparent"
-                  >
-                    <option value="txt">Text</option>
-                    <option value="md">Markdown</option>
-                    <option value="yaml">YAML</option>
-                  </select>
-                </div>
+                {optimizedPrompt && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => downloadPrompt(optimizedPrompt, 'optimized-prompt')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      {t.downloadButton}
+                    </button>
+                    <button
+                      onClick={() => copyToClipboard(optimizedPrompt, 'optimized')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
+                    >
+                      {copiedOptimized ? (
+                        <>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          {t.copied}
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          {t.copyButton}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
               
-              {result && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={downloadPrompt}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    {t.downloadButton}
-                  </button>
-                  <button
-                    onClick={copyToClipboard}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
-                  >
-                    {copied ? (
-                      <>
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        {t.copied}
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        {t.copyButton}
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
-            
-            <div className="min-h-[400px] p-4 border border-slate-200 rounded-lg bg-white/70">
-              {result ? (
-                <pre className="whitespace-pre-wrap text-xs text-slate-700 font-mono leading-relaxed">
-                  {result}
-                </pre>
-              ) : (
-                <div className="flex items-center justify-center h-full text-slate-400">
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">⌨️</div>
-                    <p className="text-sm">{t.outputPlaceholder}</p>
+              <div className="min-h-[200px] p-4 border border-slate-200 rounded-lg bg-white/70">
+                {optimizedPrompt ? (
+                  <pre className="whitespace-pre-wrap text-xs text-slate-700 font-mono leading-relaxed">
+                    {optimizedPrompt}
+                  </pre>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-slate-400">
+                    <div className="text-center">
+                      <div className="text-xl mb-2">📝</div>
+                      <p className="text-sm">{language === 'pt' ? 'Prompt estruturado aparecerá aqui' : 'Structured prompt will appear here'}</p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+
+            {/* Consolidated Prompt Card */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-slate-700">
+                  {t.consolidatedPromptLabel}
+                </label>
+                
+                {consolidatedPrompt && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => downloadPrompt(consolidatedPrompt, 'consolidated-prompt')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      {t.downloadButton}
+                    </button>
+                    <button
+                      onClick={() => copyToClipboard(consolidatedPrompt, 'consolidated')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-slate-600 hover:text-slate-800 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
+                    >
+                      {copiedConsolidated ? (
+                        <>
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          {t.copied}
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          {t.copyButton}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="min-h-[200px] p-4 border border-slate-200 rounded-lg bg-white/70">
+                {consolidatedPrompt ? (
+                  <pre className="whitespace-pre-wrap text-xs text-slate-700 font-mono leading-relaxed">
+                    {consolidatedPrompt}
+                  </pre>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-slate-400">
+                    <div className="text-center">
+                      <div className="text-xl mb-2">🎯</div>
+                      <p className="text-sm">{language === 'pt' ? 'Prompt consolidado aparecerá aqui' : 'Consolidated prompt will appear here'}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -449,10 +517,22 @@ export default function Home() {
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-slate-600 truncate">{item.input}</p>
                         <p className="text-xs text-slate-400 mt-1">
-                          {new Date(item.timestamp).toLocaleDateString()} at {new Date(item.timestamp).toLocaleTimeString()}
+                          {new Date(item.timestamp).toLocaleDateString()} {new Date(item.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
-                      <div className="text-xs text-slate-400 ml-2">→</div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const updatedHistory = history.filter(h => h.id !== item.id);
+                          setHistory(updatedHistory);
+                          localStorage.setItem('rtctf-history', JSON.stringify(updatedHistory));
+                        }}
+                        className="ml-2 text-slate-400 hover:text-slate-600 transition-colors"
+                      >
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -460,142 +540,6 @@ export default function Home() {
             )}
           </div>
         )}
-
-        {/* Enhanced Methodology Info */}
-        <div className="mt-12 border-t border-slate-200 pt-8">
-          <details className="group">
-            <summary 
-              className="cursor-pointer text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
-              onClick={() => analytics.trackMethodologyViewed(language)}
-            >
-              {t.methodologyTitle}
-            </summary>
-            <div className="mt-6 space-y-6">
-              {/* Description */}
-              <p className="text-sm text-slate-600 leading-relaxed">
-                {t.methodologyDescription}
-              </p>
-              
-              {/* RTCTF Components */}
-              <div className="grid md:grid-cols-5 gap-4">
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-bold text-slate-800">R</span>
-                    <strong className="text-slate-700 text-sm">{t.role}</strong>
-                  </div>
-                  <p className="text-xs text-slate-600 mb-2">{t.roleDesc}</p>
-                  <div className="text-xs text-slate-500 italic">
-                    {language === 'pt' ? 'Ex: "Você é um especialista em marketing"' : 'Ex: "You are a marketing expert"'}
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-bold text-slate-800">T</span>
-                    <strong className="text-slate-700 text-sm">{t.task}</strong>
-                  </div>
-                  <p className="text-xs text-slate-600 mb-2">{t.taskDesc}</p>
-                  <div className="text-xs text-slate-500 italic">
-                    {language === 'pt' ? 'Ex: "Analise o mercado de apps"' : 'Ex: "Analyze the app market"'}
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-bold text-slate-800">C</span>
-                    <strong className="text-slate-700 text-sm">{t.context}</strong>
-                  </div>
-                  <p className="text-xs text-slate-600 mb-2">{t.contextDesc}</p>
-                  <div className="text-xs text-slate-500 italic">
-                    {language === 'pt' ? 'Ex: "Para startup B2B no Brasil"' : 'Ex: "For B2B startup in Brazil"'}
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-bold text-slate-800">T</span>
-                    <strong className="text-slate-700 text-sm">{t.tone}</strong>
-                  </div>
-                  <p className="text-xs text-slate-600 mb-2">{t.toneDesc}</p>
-                  <div className="text-xs text-slate-500 italic">
-                    {language === 'pt' ? 'Ex: "Tom profissional e técnico"' : 'Ex: "Professional and technical tone"'}
-                  </div>
-                </div>
-                
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-lg font-bold text-slate-800">F</span>
-                    <strong className="text-slate-700 text-sm">{t.format}</strong>
-                  </div>
-                  <p className="text-xs text-slate-600 mb-2">{t.formatDesc}</p>
-                  <div className="text-xs text-slate-500 italic">
-                    {language === 'pt' ? 'Ex: "Lista com 5 itens"' : 'Ex: "List with 5 items"'}
-                  </div>
-                </div>
-              </div>
-
-              {/* Before/After Example */}
-              <div className="grid md:grid-cols-2 gap-6 mt-8">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <h4 className="text-sm font-medium text-red-800 mb-3">
-                    ❌ {language === 'pt' ? 'Prompt Básico' : 'Basic Prompt'}
-                  </h4>
-                  <p className="text-xs text-red-700 font-mono bg-white/50 p-3 rounded">
-                    {language === 'pt' 
-                      ? '"Crie uma estratégia de marketing"'
-                      : '"Create a marketing strategy"'
-                    }
-                  </p>
-                  <p className="text-xs text-red-600 mt-2">
-                    {language === 'pt' 
-                      ? 'Muito vago, sem contexto ou direcionamento'
-                      : 'Too vague, lacks context and direction'
-                    }
-                  </p>
-                </div>
-                
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <h4 className="text-sm font-medium text-green-800 mb-3">
-                    ✅ {language === 'pt' ? 'Prompt RTCTF' : 'RTCTF Prompt'}
-                  </h4>
-                  <p className="text-xs text-green-700 font-mono bg-white/50 p-3 rounded">
-                    {language === 'pt' 
-                      ? '"Role: Você é um especialista em marketing digital com 10 anos de experiência em startups B2B.\nTask: Desenvolva uma estratégia completa de marketing para um app de produtividade.\nContext: Startup brasileira, foco em empresas médias, orçamento de R$ 50k.\nTone: Profissional, com dados e métricas, linguagem acessível para executivos.\nFormat: Apresentação com 8 slides: situação atual, personas, canais, cronograma, métricas e orçamento."'
-                      : '"Role: You are a digital marketing expert with 10 years of B2B startup experience.\nTask: Develop a comprehensive marketing strategy for a productivity app.\nContext: Brazilian startup, targeting mid-size companies, R$ 50k budget.\nTone: Professional, data-driven, executive-friendly language.\nFormat: 8-slide presentation: current situation, personas, channels, timeline, metrics and budget."'
-                    }
-                  </p>
-                  <p className="text-xs text-green-600 mt-2">
-                    {language === 'pt' 
-                      ? 'Específico, contextualizado e com formato claro'
-                      : 'Specific, contextualized with clear format'
-                    }
-                  </p>
-                </div>
-              </div>
-
-              {/* Benefits */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-blue-800 mb-3">
-                  🚀 {language === 'pt' ? 'Por que usar RTCTF?' : 'Why use RTCTF?'}
-                </h4>
-                <div className="grid md:grid-cols-3 gap-3 text-xs text-blue-700">
-                  <div>
-                    <strong>{language === 'pt' ? '3x mais precisão' : '3x more precision'}</strong>
-                    <p>{language === 'pt' ? 'Respostas mais relevantes' : 'More relevant responses'}</p>
-                  </div>
-                  <div>
-                    <strong>{language === 'pt' ? '5x menos retrabalho' : '5x less rework'}</strong>
-                    <p>{language === 'pt' ? 'Primeira tentativa certa' : 'Right on first try'}</p>
-                  </div>
-                  <div>
-                    <strong>{language === 'pt' ? 'Consistência' : 'Consistency'}</strong>
-                    <p>{language === 'pt' ? 'Resultados reproduzíveis' : 'Reproducible results'}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </details>
-        </div>
       </div>
     </div>
   );
