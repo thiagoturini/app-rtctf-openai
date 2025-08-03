@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export type OutputFormat = 'txt' | 'md' | 'yaml';
+export type OutputFormat = 'txt' | 'md' | 'json';
 
 interface FormatConfig {
   label: string;
@@ -19,10 +19,10 @@ export const formatConfigs: Record<OutputFormat, FormatConfig> = {
     extension: 'md', 
     mimeType: 'text/markdown'
   },
-  yaml: {
-    label: 'YAML',
-    extension: 'yaml',
-    mimeType: 'text/yaml'
+  json: {
+    label: 'JSON',
+    extension: 'json',
+    mimeType: 'application/json'
   }
 };
 
@@ -55,10 +55,10 @@ export function useOutputFormat() {
   const formatContent = (content: string): string => {
     switch (format) {
       case 'md':
-        return content; // Already in markdown format
+        return formatToMarkdown(content);
         
-      case 'yaml':
-        return convertToYaml(content);
+      case 'json':
+        return convertToJSON(content);
         
       case 'txt':
       default:
@@ -74,63 +74,129 @@ export function useOutputFormat() {
   };
 }
 
-function convertToText(content: string): string {
-  // Remove markdown formatting for plain text
-  return content
-    .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
-    .replace(/\*(.*?)\*/g, '$1')     // Remove italic
-    .replace(/^#+\s/gm, '')          // Remove headers
-    .replace(/^-\s/gm, '• ')         // Convert bullets
-    .replace(/\n{3,}/g, '\n\n');     // Normalize line breaks
-}
-
-function convertToYaml(content: string): string {
-  try {
-    // Extract RTCTF components from markdown content
-    const sections = {
-      methodology: 'RTCTF',
-      result: extractSection(content, 'R \\(Resultado Desejado\\):|Result Desired:'),
-      task: extractSection(content, 'T \\(Tarefa Específica\\):|Task:'),
-      context: extractSection(content, 'C \\(Contexto Relevante\\):|Context:'),
-      criteria: extractSection(content, 'C \\(Critérios e Restrições\\):|Criteria:'),
-      format: extractSection(content, 'F \\(Formato de Resposta\\):|Format:'),
-      final_prompt: extractSection(content, 'PROMPT FINAL CONSOLIDADO:|FINAL CONSOLIDATED PROMPT:')
-    };
-    
-    return `# RTCTF Prompt Structure
-methodology: "${sections.methodology}"
-components:
-  result: |
-    ${sections.result.replace(/\n/g, '\n    ')}
-  task: |
-    ${sections.task.replace(/\n/g, '\n    ')}
-  context: |
-    ${sections.context.replace(/\n/g, '\n    ')}
-  criteria: |
-    ${sections.criteria.replace(/\n/g, '\n    ')}
-  format: |
-    ${sections.format.replace(/\n/g, '\n    ')}
-
-final_prompt: |
-  ${sections.final_prompt.replace(/\n/g, '\n  ')}
-
-metadata:
-  generated_at: "${new Date().toISOString()}"
-  version: "2.1"`;
-  } catch (error) {
-    console.error('Error converting to YAML:', error);
-    return content;
-  }
-}
-
-function extractSection(content: string, sectionPattern: string): string {
-  const regex = new RegExp(`${sectionPattern}\\s*([\\s\\S]*?)(?=\\n\\*\\*|$)`, 'i');
-  const match = content.match(regex);
-  if (!match) return '';
+function formatToMarkdown(content: string): string {
+  // Convert plain text to proper markdown with consistent formatting
+  let result = content;
   
-  return match[1]
-    .trim()
-    .replace(/^\*\*.*?\*\*:?\s*/gm, '') // Remove section headers
-    .replace(/^-\s/gm, '- ')            // Normalize bullets
+  // First, ensure we have clean text (remove any existing markdown)
+  result = convertToText(result);
+  
+  // Now apply markdown formatting
+  result = result
+    // Convert main titles (standalone lines that look like titles)
+    .replace(/^([A-Z][^:\n]*[^:\n])$/gm, '# $1')
+    
+    // Convert labels followed by colon to bold (like "Autor:", "Data:")
+    .replace(/^([A-Za-z\s]+):\s*(.+)$/gm, '**$1:** $2')
+    
+    // Convert section headers that end with colon only (like "Tarefas concluídas:")
+    .replace(/^([A-Za-z\s]+):$/gm, '## $1')
+    
+    // Convert bullet points to proper markdown bullets
+    .replace(/^•\s+/gm, '- ')
+    
+    // Add proper line breaks after headings and before lists
+    .replace(/^(#+ .+)$/gm, '$1\n')
+    .replace(/^(\*\*[^:]+:\*\* .+)$/gm, '$1  ')
+    
+    // Clean up excessive line breaks
+    .replace(/\n{3,}/g, '\n\n')
     .trim();
+    
+  return result;
+}
+
+function convertToText(content: string): string {
+  // Convert to clean plain text - remove ALL markdown formatting
+  return content
+    .replace(/\*\*(.*?)\*\*/g, '$1')           // Remove bold **text**
+    .replace(/\*(.*?)\*/g, '$1')               // Remove italic *text*
+    .replace(/^#+\s+/gm, '')                   // Remove headers (# ## ### etc)
+    .replace(/^-\s+/gm, '• ')                  // Convert bullets
+    .replace(/`([^`]+)`/g, '$1')               // Remove inline code `code`
+    .replace(/```[\s\S]*?```/g, '')            // Remove code blocks
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')   // Remove links [text](url), keep text
+    .replace(/^\s*>\s*/gm, '')                 // Remove blockquotes
+    .replace(/^\s*\|\s*.*\s*\|.*$/gm, '')      // Remove tables
+    .replace(/---+/g, '')                      // Remove horizontal rules
+    .replace(/\n{3,}/g, '\n\n')                // Normalize multiple line breaks
+    .replace(/^\s+/gm, '')                     // Remove leading whitespace
+    .replace(/\s+$/gm, '')                     // Remove trailing whitespace
+    .trim();
+}
+
+function convertToJSON(content: string): string {
+  try {
+    // Start with clean text
+    const cleanContent = convertToText(content);
+    const lines = cleanContent.split('\n').filter(line => line.trim());
+    
+    let jsonObject: any = {};
+    let paragraphs: string[] = [];
+    let currentListKey = '';
+    let currentList: string[] = [];
+    
+    for (const line of lines) {
+      const trimmed = line.trim();
+      
+      if (!trimmed) continue;
+      
+      // Check for key-value pairs (like "Autor: Thiago Pinto")
+      if (trimmed.includes(':') && !trimmed.startsWith('•') && !trimmed.endsWith(':')) {
+        const colonIndex = trimmed.indexOf(':');
+        const key = trimmed.substring(0, colonIndex).trim().toLowerCase().replace(/\s+/g, '_');
+        const value = trimmed.substring(colonIndex + 1).trim();
+        if (key && value) {
+          jsonObject[key] = value;
+        }
+      }
+      // Check for section headers (ending with :)
+      else if (trimmed.endsWith(':')) {
+        // Save previous list if exists
+        if (currentListKey && currentList.length > 0) {
+          jsonObject[currentListKey] = currentList;
+        }
+        // Start new list
+        currentListKey = trimmed.slice(0, -1).toLowerCase().replace(/\s+/g, '_');
+        currentList = [];
+      }
+      // Check for list items
+      else if (trimmed.startsWith('•') || trimmed.startsWith('-')) {
+        const item = trimmed.substring(1).trim();
+        if (currentListKey) {
+          currentList.push(item);
+        }
+      }
+      // Check if it looks like a title (no colons, standalone)
+      else if (!trimmed.includes(':') && lines.indexOf(line) < 3) {
+        if (!jsonObject.titulo) {
+          jsonObject.titulo = trimmed;
+        }
+      }
+      // Regular paragraph
+      else {
+        paragraphs.push(trimmed);
+      }
+    }
+    
+    // Save final list if exists
+    if (currentListKey && currentList.length > 0) {
+      jsonObject[currentListKey] = currentList;
+    }
+    
+    // Add paragraphs if any
+    if (paragraphs.length > 0) {
+      jsonObject.paragrafos = paragraphs;
+    }
+    
+    return JSON.stringify(jsonObject, null, 2);
+    
+  } catch (error) {
+    console.error('Error converting to JSON:', error);
+    return JSON.stringify({
+      error: "Conversion failed",
+      original_content: content,
+      generated_at: new Date().toISOString()
+    }, null, 2);
+  }
 }

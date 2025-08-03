@@ -76,7 +76,7 @@ interface Translations {
 const translations: Record<Language, Translations> = {
   en: {
     title: "RTCTF Transformer",
-    subtitle: "Transform any question into a structured prompt for your AI",
+    subtitle: "Transform any question for your AI into a structured prompt and get better results",
     valueProposition: "Turn simple questions into optimized prompts that follow the RTCTF methodology (Role-Task-Context-Tone-Format) to get better responses from AI models.",
     
     inputLabel: "Your Question or Idea",
@@ -145,7 +145,7 @@ const translations: Record<Language, Translations> = {
     ],
     
     // Tips section  
-    tipsTitle: "💡 Tips for amazing prompts",
+    tipsTitle: "Tips for amazing prompts",
     tips: [
       "Be specific about what you want",
       "Mention your target audience or context", 
@@ -163,7 +163,7 @@ const translations: Record<Language, Translations> = {
   
   pt: {
     title: "RTCTF Transformer",
-    subtitle: "Transforme qualquer pergunta em um prompt estruturado para sua IA",
+    subtitle: "Transforme qualquer pergunta para sua IA em um prompt estruturado e obtenha melhores resultados",
     valueProposition: "Transforme perguntas simples em prompts otimizados que seguem a metodologia RTCTF (Papel-Tarefa-Contexto-Tom-Formato) para obter melhores respostas de modelos de IA.",
     
     inputLabel: "Sua Pergunta ou Ideia",
@@ -232,7 +232,7 @@ const translations: Record<Language, Translations> = {
     ],
     
     // Seção de dicas
-    tipsTitle: "💡 Dicas para prompts incríveis",
+    tipsTitle: "Dicas para prompts incríveis",
     tips: [
       "Seja específico sobre o que você quer",
       "Mencione seu público-alvo ou contexto",

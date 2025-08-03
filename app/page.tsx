@@ -77,7 +77,7 @@ export default function Home() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      analytics.trackPromptDownloaded(format);
+      analytics.trackPromptDownloaded(format as any);
     }
   };
 
@@ -105,7 +105,7 @@ export default function Home() {
           navigator.clipboard.writeText(optimizedPrompt);
           setCopiedOptimized(true);
           setTimeout(() => setCopiedOptimized(false), 2000);
-          analytics.trackPromptCopied('keyboard_shortcut', format);
+          analytics.trackPromptCopied('keyboard_shortcut', format as any);
         }
       }
     };
@@ -158,7 +158,7 @@ export default function Home() {
         
         saveToHistory(text, prompt);
         // Track successful prompt generation with new parameters
-        analytics.trackPromptGenerated(data.source || 'Local', text, prompt, format, language);
+        analytics.trackPromptGenerated(data.source || 'Local', text, prompt, format as any, language);
         
         // Track AI fallback if it occurred
         if (data.source === 'Local (AI unavailable)') {
@@ -187,7 +187,7 @@ export default function Home() {
         setCopiedConsolidated(true);
         setTimeout(() => setCopiedConsolidated(false), 2000);
       }
-      analytics.trackPromptCopied('copy_button', format);
+      analytics.trackPromptCopied('copy_button', format as any);
     }
   };
 
@@ -268,16 +268,9 @@ export default function Home() {
       </div>
 
       <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Value Proposition */}
-        <div className="mb-8 text-center">
-          <p className="text-slate-700 max-w-3xl mx-auto leading-relaxed">
-            {t.valueProposition}
-          </p>
-        </div>
-
         <div className="grid lg:grid-cols-3 gap-8">
           
-          {/* Input Section */}
+          {/* Left Column - Input and Sections */}
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -327,7 +320,7 @@ export default function Home() {
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">🤖</span>
                 <h3 className="text-sm font-medium text-blue-900">
-                  {t.aiModelsTitle}
+                  Compatível com os Principais Modelos de IA
                 </h3>
               </div>
               
@@ -346,23 +339,62 @@ export default function Home() {
               </div>
             </div>
 
-            {/* History Button */}
-            {history.length > 0 && (
-              <button
-                onClick={() => {
-                  setShowHistory(!showHistory);
-                  if (!showHistory) {
-                    analytics.trackHistoryViewed(history.length);
-                  }
-                }}
-                className="w-full text-xs text-slate-600 hover:text-slate-800 px-3 py-2 border border-slate-200 rounded-md hover:bg-slate-50 transition-all duration-200"
-              >
-                {t.historyButton} ({history.length})
-              </button>
-            )}
+            {/* History Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-slate-700">{t.historyTitle}</h3>
+                {history.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setHistory([]);
+                      localStorage.removeItem('rtctf-history');
+                    }}
+                    className="text-xs text-slate-500 hover:text-slate-700 transition-colors"
+                  >
+                    {t.clearHistoryButton}
+                  </button>
+                )}
+              </div>
+
+              {history.length === 0 ? (
+                <p className="text-sm text-slate-500 text-center py-4 border border-slate-200 rounded-lg bg-slate-50">{t.noHistory}</p>
+              ) : (
+                <div className="grid gap-2 max-h-[200px] overflow-y-auto">
+                  {history.slice(0, 5).map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => setText(item.input)}
+                      className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-slate-600 truncate">{item.input}</p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {new Date(item.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const updatedHistory = history.filter(h => h.id !== item.id);
+                            setHistory(updatedHistory);
+                            localStorage.setItem('rtctf-history', JSON.stringify(updatedHistory));
+                          }}
+                          className="ml-2 text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Output Section - Two Cards */}
+          {/* Right Column - Output and Additional Sections */}
           <div className="lg:col-span-2 space-y-6">
             
             {/* Optimized Prompt Card */}
@@ -380,15 +412,15 @@ export default function Home() {
                       value={format}
                       onChange={(e) => {
                         const oldFormat = format;
-                        const newFormat = e.target.value as 'txt' | 'md' | 'yaml';
+                        const newFormat = e.target.value as 'txt' | 'md' | 'json';
                         changeFormat(newFormat);
-                        analytics.trackOutputFormatChanged(oldFormat, newFormat);
+                        analytics.trackOutputFormatChanged(oldFormat as any, newFormat as any);
                       }}
                       className="text-xs border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-slate-400 focus:border-transparent"
                     >
                       <option value="txt">Text</option>
                       <option value="md">Markdown</option>
-                      <option value="yaml">YAML</option>
+                      <option value="json">JSON</option>
                     </select>
                   </div>
                 </div>
@@ -431,7 +463,7 @@ export default function Home() {
               <div className="min-h-[200px] p-4 border border-slate-200 rounded-lg bg-white/70">
                 {optimizedPrompt ? (
                   <pre className="whitespace-pre-wrap text-xs text-slate-700 font-mono leading-relaxed">
-                    {optimizedPrompt}
+                    {formatContent(optimizedPrompt)}
                   </pre>
                 ) : (
                   <div className="flex items-center justify-center h-full text-slate-400">
@@ -459,15 +491,15 @@ export default function Home() {
                       value={format}
                       onChange={(e) => {
                         const oldFormat = format;
-                        const newFormat = e.target.value as 'txt' | 'md' | 'yaml';
+                        const newFormat = e.target.value as 'txt' | 'md' | 'json';
                         changeFormat(newFormat);
-                        analytics.trackOutputFormatChanged(oldFormat, newFormat);
+                        analytics.trackOutputFormatChanged(oldFormat as any, newFormat as any);
                       }}
                       className="text-xs border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-slate-400 focus:border-transparent"
                     >
                       <option value="txt">Text</option>
                       <option value="md">Markdown</option>
-                      <option value="yaml">YAML</option>
+                      <option value="json">JSON</option>
                     </select>
                   </div>
                 </div>
@@ -510,7 +542,7 @@ export default function Home() {
               <div className="min-h-[200px] p-4 border border-slate-200 rounded-lg bg-white/70">
                 {consolidatedPrompt ? (
                   <pre className="whitespace-pre-wrap text-xs text-slate-700 font-mono leading-relaxed">
-                    {consolidatedPrompt}
+                    {formatContent(consolidatedPrompt)}
                   </pre>
                 ) : (
                   <div className="flex items-center justify-center h-full text-slate-400">
@@ -525,138 +557,146 @@ export default function Home() {
           </div>
         </div>
 
-        {/* History Panel */}
-        {showHistory && (
-          <div className="mt-8 border-t border-slate-200 pt-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-slate-700">{t.historyTitle}</h3>
-              {history.length > 0 && (
-                <button
-                  onClick={clearHistory}
-                  className="text-xs text-slate-500 hover:text-slate-700 transition-colors"
-                >
-                  {t.clearHistoryButton}
-                </button>
-              )}
+        {/* Additional Sections - Well organized in grid */}
+        <div className="mt-12 grid md:grid-cols-3 gap-6">
+          
+          {/* Tips Section */}
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <h3 className="text-sm font-medium text-purple-900">
+                {t.tipsTitle}
+              </h3>
             </div>
             
-            {history.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">{t.noHistory}</p>
-            ) : (
-              <div className="grid gap-3">
-                {history.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => loadFromHistory(item)}
-                    className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors"
+            <div className="space-y-3">
+              {t.tips.map((tip, idx) => (
+                <div key={idx} className="flex items-start gap-2">
+                  <span className="text-purple-400 mt-0.5 text-xs">•</span>
+                  <p className="text-xs text-purple-700">{tip}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Quick Examples */}
+            <div className="mt-4 pt-4 border-t border-purple-200">
+              <h4 className="text-xs font-medium text-purple-800 mb-2">{t.examplesTitle}</h4>
+              <div className="space-y-1">
+                {t.examples.slice(0, 3).map((example, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setText(example)}
+                    className="block w-full text-left text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-100 p-2 rounded transition-colors"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-600 truncate">{item.input}</p>
-                        <p className="text-xs text-slate-400 mt-1">
-                          {new Date(item.timestamp).toLocaleDateString()} {new Date(item.timestamp).toLocaleTimeString()}
-                        </p>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const updatedHistory = history.filter(h => h.id !== item.id);
-                          setHistory(updatedHistory);
-                          localStorage.setItem('rtctf-history', JSON.stringify(updatedHistory));
-                        }}
-                        className="ml-2 text-slate-400 hover:text-slate-600 transition-colors"
-                      >
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
+                    &ldquo;{example}&rdquo;
+                  </button>
                 ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Footer with RTCTF Methodology Explanation */}
-        <div className="mt-16 border-t border-slate-200 pt-12">
-          <div className="grid md:grid-cols-2 gap-8">
-            
-            {/* RTCTF Methodology */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h3 className="text-sm font-medium text-blue-900 mb-3">{t.methodologyTitle}</h3>
-              <p className="text-xs text-blue-700 leading-relaxed mb-4">{t.methodologyDescription}</p>
-              
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">R</div>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.role}</span>
-                    <p className="text-xs text-blue-600">{t.roleDesc}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">T</div>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.task}</span>
-                    <p className="text-xs text-blue-600">{t.taskDesc}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">C</div>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.context}</span>
-                    <p className="text-xs text-blue-600">{t.contextDesc}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">T</div>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.tone}</span>
-                    <p className="text-xs text-blue-600">{t.toneDesc}</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">F</div>
-                  <div>
-                    <span className="text-xs font-medium text-blue-800">{t.format}</span>
-                    <p className="text-xs text-blue-600">{t.formatDesc}</p>
-                  </div>
-                </div>
               </div>
             </div>
+          </div>
 
-            {/* Tips Section */}
-            <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-lg">💡</span>
-                <h3 className="text-sm font-medium text-purple-900">
-                  {t.tipsTitle}
-                </h3>
+          {/* Benefits Section */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">⚡</span>
+              <h3 className="text-sm font-medium text-green-900">
+                {language === 'pt' ? 'Por que usar RTCTF?' : 'Why use RTCTF?'}
+              </h3>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-3">
+              <div className="flex items-center gap-3 text-xs text-green-700">
+                <span className="text-green-500 text-base">🚀</span>
+                <span>{language === 'pt' ? '5x mais rápido que criar prompts manualmente' : '5x faster than creating prompts manually'}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-green-700">
+                <span className="text-green-500 text-base">🎯</span>
+                <span>{language === 'pt' ? 'Resultados mais precisos e consistentes' : 'More accurate and consistent results'}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-green-700">
+                <span className="text-green-500 text-base">🔄</span>
+                <span>{language === 'pt' ? 'Reutilize e adapte facilmente' : 'Easily reuse and adapt'}</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-green-700">
+                <span className="text-green-500 text-base">🌐</span>
+                <span>{language === 'pt' ? 'Funciona com qualquer modelo de IA' : 'Works with any AI model'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* RTCTF Methodology Section */}
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">✅</span>
+              <h3 className="text-sm font-medium text-blue-900">
+                {language === 'pt' ? 'O que é a metodologia RTCTF?' : 'What is RTCTF methodology?'}
+              </h3>
+            </div>
+            
+            <p className="text-xs text-blue-700 mb-4">
+              {language === 'pt' 
+                ? 'RTCTF é uma estrutura para escrever prompts claros e eficazes para modelos de IA, fornecendo contexto e instruções precisas.'
+                : 'RTCTF is a framework for writing clear and effective prompts for AI models, providing precise context and instructions.'
+              }
+            </p>
+            
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <div className="bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded flex items-center justify-center mt-0.5">R</div>
+                <div>
+                  <div className="text-xs font-medium text-blue-800">
+                    {language === 'pt' ? 'Role (Papel)' : 'Role'}
+                  </div>
+                  <div className="text-xs text-blue-600">
+                    {language === 'pt' ? 'Quem a IA deve representar' : 'Who the AI should represent'}
+                  </div>
+                </div>
               </div>
               
-              <div className="space-y-3">
-                {t.tips.map((tip, idx) => (
-                  <div key={idx} className="flex items-start gap-2">
-                    <span className="text-purple-400 mt-0.5">•</span>
-                    <p className="text-xs text-purple-700">{tip}</p>
+              <div className="flex items-start gap-2">
+                <div className="bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded flex items-center justify-center mt-0.5">T</div>
+                <div>
+                  <div className="text-xs font-medium text-blue-800">
+                    {language === 'pt' ? 'Task (Tarefa)' : 'Task'}
                   </div>
-                ))}
+                  <div className="text-xs text-blue-600">
+                    {language === 'pt' ? 'O que a IA deve fazer' : 'What the AI should do'}
+                  </div>
+                </div>
               </div>
-
-              {/* Quick Examples */}
-              <div className="mt-4 pt-4 border-t border-purple-200">
-                <h4 className="text-xs font-medium text-purple-800 mb-2">{t.examplesTitle}</h4>
-                <div className="space-y-1">
-                  {t.examples.map((example, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setText(example)}
-                      className="block w-full text-left text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-100 p-2 rounded transition-colors"
-                    >
-                      &ldquo;{example}&rdquo;
-                    </button>
-                  ))}
+              
+              <div className="flex items-start gap-2">
+                <div className="bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded flex items-center justify-center mt-0.5">C</div>
+                <div>
+                  <div className="text-xs font-medium text-blue-800">
+                    {language === 'pt' ? 'Context (Contexto)' : 'Context'}
+                  </div>
+                  <div className="text-xs text-blue-600">
+                    {language === 'pt' ? 'Informações de fundo' : 'Background information'}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded flex items-center justify-center mt-0.5">T</div>
+                <div>
+                  <div className="text-xs font-medium text-blue-800">
+                    {language === 'pt' ? 'Tone (Tom)' : 'Tone'}
+                  </div>
+                  <div className="text-xs text-blue-600">
+                    {language === 'pt' ? 'Estilo de escrita' : 'Writing style'}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-2">
+                <div className="bg-blue-500 text-white text-xs font-bold w-5 h-5 rounded flex items-center justify-center mt-0.5">F</div>
+                <div>
+                  <div className="text-xs font-medium text-blue-800">
+                    {language === 'pt' ? 'Format (Formato)' : 'Format'}
+                  </div>
+                  <div className="text-xs text-blue-600">
+                    {language === 'pt' ? 'Estrutura da resposta' : 'Response structure'}
+                  </div>
                 </div>
               </div>
             </div>
