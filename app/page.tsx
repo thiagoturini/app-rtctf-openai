@@ -57,7 +57,7 @@ export default function Home() {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [result]); // Remove analytics dependency to avoid re-creating the effect
+  }, [result, analytics, format]); // Add missing dependencies
 
   // Save history to localStorage
   const saveToHistory = (input: string, output: string) => {
@@ -232,7 +232,7 @@ export default function Home() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                Input
+                {t.inputLabel}
               </label>
               <form onSubmit={handleSubmit} className="space-y-3">
                 <textarea
@@ -240,7 +240,7 @@ export default function Home() {
                   onChange={(e) => setText(e.target.value)}
                   rows={8}
                   className="w-full p-4 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-400 focus:border-transparent bg-white/70 font-mono placeholder-slate-400 resize-none"
-                  placeholder="Type your idea here..."
+                  placeholder={t.inputPlaceholder}
                   required
                 />
                 
@@ -253,10 +253,10 @@ export default function Home() {
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        Processing...
+                        {t.processing}
                       </span>
                     ) : (
-                      'Transform'
+                      t.transformButton
                     )}
                   </button>
                   
@@ -266,7 +266,7 @@ export default function Home() {
                       onClick={clearAll}
                       className="px-4 py-2.5 text-slate-600 hover:text-slate-800 transition-colors text-sm"
                     >
-                      Clear
+                      {t.clearButton}
                     </button>
                   )}
                 </div>
@@ -275,19 +275,14 @@ export default function Home() {
 
             {/* Quick Examples */}
             <div className="mt-6">
-              <p className="text-xs text-slate-500 mb-2">Quick examples:</p>
+              <p className="text-xs text-slate-500 mb-2">{t.examplesTitle}</p>
               <div className="space-y-1">
-                {[
-                  "Create a marketing strategy for a new app",
-                  "Explain machine learning to beginners", 
-                  "Analyze customer feedback data",
-                  "Plan a team productivity workshop"
-                ].map((example, idx) => (
+                {t.examples.map((example, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
                       setText(example);
-                      analytics.trackExampleUsed(example);
+                      analytics.trackExampleUsed(example, language);
                     }}
                     className="block text-left text-xs text-slate-600 hover:text-slate-800 py-1 transition-colors"
                   >
@@ -301,9 +296,36 @@ export default function Home() {
           {/* Output Section */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
-              <label className="block text-sm font-medium text-slate-700">
-                Output
-              </label>
+              <div className="flex items-center gap-4">
+                <label className="block text-sm font-medium text-slate-700">
+                  {t.outputLabel}
+                </label>
+                
+                {/* Format Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">{t.formatLabel}:</span>
+                  <select
+                    value={format}
+                    onChange={(e) => {
+                      const oldFormat = format;
+                      const newFormat = e.target.value as 'txt' | 'md' | 'yaml';
+                      changeFormat(newFormat);
+                      analytics.trackOutputFormatChanged(oldFormat, newFormat);
+                      
+                      // Re-format existing result if available
+                      if (result) {
+                        setResult(formatContent(result));
+                      }
+                    }}
+                    className="text-xs border border-slate-200 rounded px-2 py-1 focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                  >
+                    <option value="txt">Text</option>
+                    <option value="md">Markdown</option>
+                    <option value="yaml">YAML</option>
+                  </select>
+                </div>
+              </div>
+              
               {result && (
                 <div className="flex gap-2">
                   <button
@@ -313,7 +335,7 @@ export default function Home() {
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Download
+                    {t.downloadButton}
                   </button>
                   <button
                     onClick={copyToClipboard}
@@ -324,14 +346,14 @@ export default function Home() {
                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
-                        Copied!
+                        {t.copied}
                       </>
                     ) : (
                       <>
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
-                        Copy
+                        {t.copyButton}
                       </>
                     )}
                   </button>
@@ -348,7 +370,7 @@ export default function Home() {
                 <div className="flex items-center justify-center h-full text-slate-400">
                   <div className="text-center">
                     <div className="text-2xl mb-2">⌨️</div>
-                    <p className="text-sm">Your structured prompt will appear here</p>
+                    <p className="text-sm">{t.outputPlaceholder}</p>
                   </div>
                 </div>
               )}
@@ -360,19 +382,19 @@ export default function Home() {
         {showHistory && (
           <div className="mt-8 border-t border-slate-200 pt-8">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-slate-700">Recent Transformations</h3>
+              <h3 className="text-sm font-medium text-slate-700">{t.historyTitle}</h3>
               {history.length > 0 && (
                 <button
                   onClick={clearHistory}
                   className="text-xs text-slate-500 hover:text-slate-700 transition-colors"
                 >
-                  Clear All
+                  {t.clearHistoryButton}
                 </button>
               )}
             </div>
             
             {history.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">No history yet</p>
+              <p className="text-sm text-slate-500 text-center py-8">{t.noHistory}</p>
             ) : (
               <div className="grid gap-3">
                 {history.map((item) => (
@@ -397,32 +419,137 @@ export default function Home() {
           </div>
         )}
 
-        {/* Methodology Info - Compact */}
+        {/* Enhanced Methodology Info */}
         <div className="mt-12 border-t border-slate-200 pt-8">
           <details className="group">
-            <summary className="cursor-pointer text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
-              About RTCTF Methodology
+            <summary 
+              className="cursor-pointer text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
+              onClick={() => analytics.trackMethodologyViewed(language)}
+            >
+              {t.methodologyTitle}
             </summary>
-            <div className="mt-4 grid md:grid-cols-5 gap-4 text-xs text-slate-600">
-              <div>
-                <strong className="text-slate-700">Result</strong>
-                <p>Expected outcome</p>
+            <div className="mt-6 space-y-6">
+              {/* Description */}
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {t.methodologyDescription}
+              </p>
+              
+              {/* RTCTF Components */}
+              <div className="grid md:grid-cols-5 gap-4">
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg font-bold text-slate-800">R</span>
+                    <strong className="text-slate-700 text-sm">{t.result}</strong>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-2">{t.resultDesc}</p>
+                  <div className="text-xs text-slate-500 italic">
+                    {language === 'pt' ? 'Ex: "Criar uma estratégia detalhada"' : 'Ex: "Create a detailed strategy"'}
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg font-bold text-slate-800">T</span>
+                    <strong className="text-slate-700 text-sm">{t.task}</strong>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-2">{t.taskDesc}</p>
+                  <div className="text-xs text-slate-500 italic">
+                    {language === 'pt' ? 'Ex: "Analise o mercado de apps"' : 'Ex: "Analyze the app market"'}
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg font-bold text-slate-800">C</span>
+                    <strong className="text-slate-700 text-sm">{t.context}</strong>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-2">{t.contextDesc}</p>
+                  <div className="text-xs text-slate-500 italic">
+                    {language === 'pt' ? 'Ex: "Para startup B2B"' : 'Ex: "For B2B startup"'}
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg font-bold text-slate-800">C</span>
+                    <strong className="text-slate-700 text-sm">{t.criteria}</strong>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-2">{t.criteriaDesc}</p>
+                  <div className="text-xs text-slate-500 italic">
+                    {language === 'pt' ? 'Ex: "Máximo 5 páginas"' : 'Ex: "Maximum 5 pages"'}
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg font-bold text-slate-800">F</span>
+                    <strong className="text-slate-700 text-sm">{t.format}</strong>
+                  </div>
+                  <p className="text-xs text-slate-600 mb-2">{t.formatDesc}</p>
+                  <div className="text-xs text-slate-500 italic">
+                    {language === 'pt' ? 'Ex: "Apresentação executiva"' : 'Ex: "Executive presentation"'}
+                  </div>
+                </div>
               </div>
-              <div>
-                <strong className="text-slate-700">Task</strong>
-                <p>Specific action</p>
+
+              {/* Before/After Example */}
+              <div className="grid md:grid-cols-2 gap-6 mt-8">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <h4 className="text-sm font-medium text-red-800 mb-3">
+                    ❌ {language === 'pt' ? 'Prompt Básico' : 'Basic Prompt'}
+                  </h4>
+                  <p className="text-xs text-red-700 font-mono bg-white/50 p-3 rounded">
+                    {language === 'pt' 
+                      ? '"Crie uma estratégia de marketing"'
+                      : '"Create a marketing strategy"'
+                    }
+                  </p>
+                  <p className="text-xs text-red-600 mt-2">
+                    {language === 'pt' 
+                      ? 'Muito vago, sem contexto ou direcionamento'
+                      : 'Too vague, lacks context and direction'
+                    }
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <h4 className="text-sm font-medium text-green-800 mb-3">
+                    ✅ {language === 'pt' ? 'Prompt RTCTF' : 'RTCTF Prompt'}
+                  </h4>
+                  <p className="text-xs text-green-700 font-mono bg-white/50 p-3 rounded">
+                    {language === 'pt' 
+                      ? '"Desenvolva uma estratégia de marketing digital abrangente para um app B2B de produtividade, incluindo personas, canais, métricas e orçamento para os próximos 6 meses. Estruture como apresentação executiva com slides e dados acionáveis."'
+                      : '"Develop a comprehensive digital marketing strategy for a B2B productivity app, including personas, channels, metrics and budget for the next 6 months. Structure as executive presentation with slides and actionable data."'
+                    }
+                  </p>
+                  <p className="text-xs text-green-600 mt-2">
+                    {language === 'pt' 
+                      ? 'Específico, contextualizado e com formato claro'
+                      : 'Specific, contextualized with clear format'
+                    }
+                  </p>
+                </div>
               </div>
-              <div>
-                <strong className="text-slate-700">Context</strong>
-                <p>Background info</p>
-              </div>
-              <div>
-                <strong className="text-slate-700">Criteria</strong>
-                <p>Guidelines & limits</p>
-              </div>
-              <div>
-                <strong className="text-slate-700">Format</strong>
-                <p>Response structure</p>
+
+              {/* Benefits */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-blue-800 mb-3">
+                  🚀 {language === 'pt' ? 'Por que usar RTCTF?' : 'Why use RTCTF?'}
+                </h4>
+                <div className="grid md:grid-cols-3 gap-3 text-xs text-blue-700">
+                  <div>
+                    <strong>{language === 'pt' ? '3x mais precisão' : '3x more precision'}</strong>
+                    <p>{language === 'pt' ? 'Respostas mais relevantes' : 'More relevant responses'}</p>
+                  </div>
+                  <div>
+                    <strong>{language === 'pt' ? '5x menos retrabalho' : '5x less rework'}</strong>
+                    <p>{language === 'pt' ? 'Primeira tentativa certa' : 'Right on first try'}</p>
+                  </div>
+                  <div>
+                    <strong>{language === 'pt' ? 'Consistência' : 'Consistency'}</strong>
+                    <p>{language === 'pt' ? 'Resultados reproduzíveis' : 'Reproducible results'}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </details>

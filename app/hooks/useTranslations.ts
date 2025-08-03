@@ -90,18 +90,18 @@ const translations: Record<Language, Translations> = {
     ],
     
     methodologyTitle: "About RTCTF Methodology",
-    methodologyDescription: "RTCTF is a proven framework for creating effective AI prompts that deliver better results from ChatGPT, Claude, Gemini, and other LLMs.",
+    methodologyDescription: "The RTCTF methodology provides a structured framework for creating precise, effective prompts that deliver consistent results. Each component serves a specific purpose in guiding AI responses.",
     
     result: "Result",
-    resultDesc: "Expected outcome",
+    resultDesc: "Define the expected outcome or goal",
     task: "Task", 
-    taskDesc: "Specific action",
+    taskDesc: "Specify the exact action to be performed",
     context: "Context",
-    contextDesc: "Background info",
+    contextDesc: "Provide relevant background information",
     criteria: "Criteria",
-    criteriaDesc: "Guidelines & limits",
+    criteriaDesc: "Set constraints, guidelines and limits",
     format: "Format",
-    formatDesc: "Response structure",
+    formatDesc: "Specify the desired response structure",
     
     version: "v2.1",
     
@@ -142,18 +142,18 @@ const translations: Record<Language, Translations> = {
     ],
     
     methodologyTitle: "Sobre a Metodologia RTCTF",
-    methodologyDescription: "RTCTF é um framework comprovado para criar prompts eficazes que entregam melhores resultados do ChatGPT, Claude, Gemini e outros LLMs.",
+    methodologyDescription: "A metodologia RTCTF oferece uma estrutura para criar prompts precisos e eficazes que entregam resultados consistentes. Cada componente tem um propósito específico em guiar as respostas da IA.",
     
     result: "Resultado",
-    resultDesc: "Resultado esperado",
+    resultDesc: "Define o resultado ou objetivo esperado",
     task: "Tarefa",
-    taskDesc: "Ação específica", 
+    taskDesc: "Especifica a ação exata a ser executada", 
     context: "Contexto",
-    contextDesc: "Informações de contexto",
+    contextDesc: "Fornece informações de contexto relevantes",
     criteria: "Critérios",
-    criteriaDesc: "Diretrizes e limites",
+    criteriaDesc: "Define restrições, diretrizes e limites",
     format: "Formato",
-    formatDesc: "Estrutura da resposta",
+    formatDesc: "Especifica a estrutura de resposta desejada",
     
     version: "v2.1",
     

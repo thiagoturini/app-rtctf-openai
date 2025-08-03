@@ -1,6 +1,66 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
+// Security and rate limiting
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100');
+const RATE_LIMIT_WINDOW = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'); // 15 minutes
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+// Security headers and validation
+function getClientIP(request: Request): string {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
+  return forwarded?.split(',')[0] || realIP || 'unknown';
+}
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return false;
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX) {
+    return true;
+  }
+  
+  record.count++;
+  return false;
+}
+
+function validateRequest(request: Request): { isValid: boolean; error?: string } {
+  // Validate content type
+  const contentType = request.headers.get('content-type');
+  if (!contentType?.includes('application/json')) {
+    return { isValid: false, error: 'Invalid content type' };
+  }
+  
+  // Validate origin (in production)
+  if (process.env.NODE_ENV === 'production') {
+    const origin = request.headers.get('origin');
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+    if (origin && !allowedOrigins.includes(origin)) {
+      return { isValid: false, error: 'Invalid origin' };
+    }
+  }
+  
+  return { isValid: true };
+}
+
+// Security headers
+function addSecurityHeaders(response: NextResponse): NextResponse {
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Content-Security-Policy', 
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.openai.com;"
+  );
+  return response;
+}
+
 // Função para transformar texto usando RTCTF sem API externa
 function transformToRTCTF(text: string, language: 'en' | 'pt' = 'en'): string {
   // Analisar o texto para extrair elementos e intenção
@@ -193,11 +253,42 @@ Please provide a comprehensive and well-structured response following the criter
 
 export async function POST(request: Request) {
   try {
+    // Security validation
+    const validation = validateRequest(request);
+    if (!validation.isValid) {
+      return addSecurityHeaders(NextResponse.json({ 
+        error: 'Invalid request' 
+      }, { status: 400 }));
+    }
+
+    // Rate limiting
+    const clientIP = getClientIP(request);
+    if (isRateLimited(clientIP)) {
+      const response = NextResponse.json({ 
+        error: 'Rate limit exceeded. Please try again later.' 
+      }, { 
+        status: 429,
+        headers: {
+          'Retry-After': Math.ceil(RATE_LIMIT_WINDOW / 1000).toString()
+        }
+      });
+      return addSecurityHeaders(response);
+    }
+
     const { text, useAI = false, language = 'en' } = await request.json();
-    if (!text) {
-      return NextResponse.json({ 
+    
+    // Input validation
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return addSecurityHeaders(NextResponse.json({ 
         error: language === 'pt' ? 'Texto é obrigatório.' : 'Text is required.' 
-      }, { status: 400 });
+      }, { status: 400 }));
+    }
+
+    // Text length validation (prevent abuse)
+    if (text.length > 10000) {
+      return addSecurityHeaders(NextResponse.json({ 
+        error: language === 'pt' ? 'Texto muito longo (máximo 10.000 caracteres).' : 'Text too long (maximum 10,000 characters).' 
+      }, { status: 400 }));
     }
 
     // Sempre tentar a versão local primeiro (mais rápida e sem custo)
@@ -318,11 +409,11 @@ Seja específico, detalhado e prático. O prompt final deve ser algo que qualque
 
         const aiResult = completion.choices[0].message?.content;
         if (aiResult) {
-          return NextResponse.json({ 
+          return addSecurityHeaders(NextResponse.json({ 
             prompt: aiResult, 
             source: 'AI Enhanced',
             fallback: localResult 
-          });
+          }));
         }
       } catch (aiError) {
         console.error('OpenAI error:', aiError);
@@ -331,12 +422,14 @@ Seja específico, detalhado e prático. O prompt final deve ser algo que qualque
     }
 
     // Retorna a versão local (sempre funciona)
-    return NextResponse.json({ 
+    return addSecurityHeaders(NextResponse.json({ 
       prompt: localResult, 
       source: useAI ? 'Local (AI unavailable)' : 'Local' 
-    });
+    }));
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: 'Erro ao gerar prompt.' }, { status: 500 });
+    return addSecurityHeaders(NextResponse.json({ 
+      error: 'Erro ao gerar prompt.' 
+    }, { status: 500 }));
   }
 }
